@@ -7,7 +7,7 @@ library(plyr)
 library(ggplot2)
 
 #set working directory to folder
-setwd("~/M.S. Thesis/Seed rain-selected")
+setwd("Data/RawData")
 
 
 seedrain<-read_excel("Seed rain_2014-2015_Lluvia de semillas_RBA_20_Abr_15.xlsx", sheet=3, col_names=TRUE, na= "NA")
@@ -32,13 +32,15 @@ levels(seedrain$species)<-gsub("Werahuia gladioflora", "Werauhia gladioliflora",
 #check to see what species names are now
 levels(seedrain$species)
 
+setwd("../")
+setwd("TidyData")
+write.csv(seedrain,"seedraintidy.csv")
+#csv is now in tidy data
 
-#summed across all seed rain
-sumseedrain<-ddply(seedrain, .(canopysp,block), summarize, totalseed=sum(seednum))
-ggplot(sumseedrain, aes(canopysp, totalseed))+
-  geom_boxplot()
+
+
 
 #Clean up data to look at species across the four plots removing data that is irrelevant
 
 #remove rows of data on unnamed species
-seedrain$species[c(-Muestra 100)]  #this is not working yet.
+seedrain2<-seedrain[seedrain$species!="Muestra 100",]  #this is not working yet.
