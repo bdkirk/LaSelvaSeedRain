@@ -23,6 +23,7 @@ str(seedrain)
 #provides summary values for all columns in seed rain
 summary(seedrain)
 
+#Species column is turned into a factor
 seedrain$species<-as.factor(seedrain$species)
 summary(seedrain$species)
 
@@ -35,28 +36,6 @@ levels(seedrain$species)<-gsub("Werahuia gladioflora", "Werauhia gladioliflora",
 
 #check to see what species names are now
 levels(seedrain$species)
-
-#Still working to get this correct where we can add additional date column to figure out the number of days the trap was set out for.
-for (i in 1:nrow(seedrain)){
-  seedrain$date[i] <- gsub(" UTC", "", seedrain$date[i])
-}
-names(seedrain)
-#Get unique rows of trap and date
-seed_rain_unique <- ddply(seedrain, .(date, trap), summarise, n=length(trap))
-
-#Sort by trap and date
-seed_rain_unique <- seed_rain_unique[order(seed_rain_unique$trap, seed_rain_unique$date),]
-#Create days variable
-seed_rain_unique$days <- NA
-
-for (i in 1:{nrow(seed_rain_unique)-1}){
-  seed_rain_unique$days[{i+1}] <- seed_rain_unique$date[{i+1}]-seed_rain_unique$date[i]
-}
-
-seed_rain_unique$date <- as.character(seed_rain_unique$date)
-seed_rain_unique$days[seed_rain_unique$date=="2014-01-20"] <- 7
-seed_rain_unique$days[seed_rain_unique$date=="2014-01-21"] <- 8
-
 
 seedrain$meshtype <- NA
 
@@ -72,8 +51,40 @@ meshreg
 seedrain$meshtype[seedrain$trap %in% meshsmall] <- "meshsmall"
 seedrain$meshtype[seedrain$trap %in% meshreg] <- "meshreg"
 
-#Create data set with just Mesh1 traps
+#Create data set with just Meshsmall traps
 seed_rain_unique_meshsmall <- seedrain[seedrain$meshtype=="meshsmall",]
+
+###Next section involves finding the number of days a trap was set out for
+#Make date a character
+seedrain$date <- as.character(seedrain$date)
+
+#Get unique rows of trap and date
+seed_rain_unique <- ddply(seedrain, .(date, trap), summarise, n=length(trap))
+#Get minimum date for each trap
+seed_rain_unique_min_date <- ddply(seed_rain_unique, .(trap), summarise, min=min(date))
+
+#Merge minimum date into seed_rain_unique
+seed_rain_unique <- merge(seed_rain_unique, seed_rain_unique_min_date, by=c("trap"), all.x=TRUE)
+#Sort by trap and date
+seed_rain_unique <- seed_rain_unique[order(seed_rain_unique$trap, seed_rain_unique$date),]
+#Create days variable
+seed_rain_unique$days <- NA
+
+#If it is the first day for this trap,
+#subtract 14-01-13, else subtract the previous date
+for (i in 1:{nrow(seed_rain_unique)}){
+  if (seed_rain_unique$date[{i}]==seed_rain_unique$min[{i}]){
+    seed_rain_unique$days[{i}] <- as.Date(seed_rain_unique$date[{i}], format="%Y-%m-%d")-as.Date("2014-01-13", format="%Y-%m-%d")
+  } else {
+    seed_rain_unique$days[{i}] <- as.Date(seed_rain_unique$date[{i}], format="%Y-%m-%d")-as.Date(seed_rain_unique$date[{i-1}], format="%Y-%m-%d")
+  }
+}
+
+#Take out the n variable
+seed_rain_unique <- seed_rain_unique[,-which(names(seed_rain_unique)=="n")]
+#Merge the days variable back into the main data set
+seedrain <- merge(seedrain, seed_rain_unique, by=c("date", "trap"), all.x=TRUE)
+
 
 
 
