@@ -26,6 +26,9 @@ summary(seedrain)
 #Species column is turned into a factor
 seedrain$species<-as.factor(seedrain$species)
 summary(seedrain$species)
+#made canopysp a factor
+seedrain$canopysp<-as.factor(seedrain$canopysp)
+summary(seedrain$canopysp) #does not produce anything of use
 
 #change incorrect species names
 levels(seedrain$species)<-gsub("kochnyi", "koschnyi", levels(seedrain$species))
@@ -47,12 +50,16 @@ meshsmall <- c(1, 2, 4, 7, 8, 9, 11, 12, 15, 16, 18, 19, 21, 23, 24, 27, 29, 30,
 meshreg <- trap_numbers[-which(trap_numbers%in%meshsmall)]
 meshreg
 
-#Assign Meshsmall to traps that are mesh small
+#Assign Meshsmall to traps with fine mesh liner
 seedrain$meshtype[seedrain$trap %in% meshsmall] <- "meshsmall"
 seedrain$meshtype[seedrain$trap %in% meshreg] <- "meshreg"
+#brackets tell which row should be pulled out
 
-#Create data set with just Meshsmall traps
-seed_rain_unique_meshsmall <- seedrain[seedrain$meshtype=="meshsmall",]
+#Create data set with just meshsmall traps
+seedrain_smallmesh <- seedrain[seedrain$meshtype=="meshsmall",]
+
+#Create data set with just regmesh raps
+seedrain_regmesh <- seedrain[seedrain$meshtype=="meshreg",]
 
 ###Next section involves finding the number of days a trap was set out for
 #Make date a character
@@ -85,12 +92,55 @@ seed_rain_unique <- seed_rain_unique[,-which(names(seed_rain_unique)=="n")]
 #Merge the days variable back into the main data set
 seedrain <- merge(seedrain, seed_rain_unique, by=c("date", "trap"), all.x=TRUE)
 
+#check to see which date-trap combos are missing. Check these to see if they were actually collected, but not in database because no seeds were found. 
+date_trap<-as.data.frame(with(seedrain, table(date, trap)))
+date_trap[date_trap$Freq==0 & date_trap$date != "2014-01-21" & date_trap$date!= "2014-01-20",]
+ 
+###Practice Creating plots
+#plot(indepdentvar, dependentvar)
+plot(seedrain$trap, seedrain$seednum, xlab="Trap Number", ylab= "Number of Seeds", main= "Total seeds across all traps")
 
+#categorical x --This produces the total number of observations for each canopysp
+ggplot(seedrain, aes(canopysp))+
+  geom_bar(stat="count") #default stat for geom_bar is count. Count takes a count of the number of cases, need categorical x variable, and no y-variable. 
 
+#plot x and y variables--This produces the total number of seeds found in each plot
+ggplot(seedrain, aes(meshtype, seednum))+
+  geom_boxplot()
+ggplot(seedrain, aes(canopysp, seednum))+
+  geom_violin()
+ggplot(seedrain, aes(species, seednum))+
+  geom_boxplot()
 
+##categorical variables can have tables that use frequencies or proportions
+#This will give the total number of observations in each group
+table(seedrain$canopysp)
+#This will give you all the observations for a particular variable
+length(seedrain$canopysp)
+#this will produce a two-way table
+table(seedrain$canopysp, seedrain$meshtype)
 
-#remove rows of data on unnamed species (no longer exist in new file from Ricardo)
-seedrain2<-seedrain[seedrain$species!="Muestra 100",]  #this is not working yet.
+###numerical values produce means, medians, variance var(), sd, range, min, max
+canopysp<-(seedrain$canopysp)
+species<-(seedrain$species)
+boxplot(canopysp~species)
+
+library(dplyr)
+ddply(seedrain, "canopysp", summarise, 
+      sppnum = length(unique(species)))
+##below does not work
+ ggplot("trap", aes("canopysp", "block"))+
+  +     geom_violin()
+
+speciessum <- mean(seedrain$species, seedrain$canopysp)
+
+ggplot("canopysp")
+
+ggplot("trap")
+totseeds <- sum(seedrain$seednum)
+ggplot(totseeds)
+plot(canopysp)
+
 
 #Once finished wrangling save data in a tidy file
 setwd("../")
