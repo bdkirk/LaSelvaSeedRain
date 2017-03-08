@@ -36,10 +36,31 @@ levels(seedrain$species)<-gsub("seemanii", "seemannii", levels(seedrain$species)
 levels(seedrain$species)<-gsub("tecaphora", "thecaphora", levels(seedrain$species))
 levels(seedrain$species)<-gsub("dominguensis", "domingensis", levels(seedrain$species))
 levels(seedrain$species)<-gsub("Werahuia gladioflora", "Werauhia gladioliflora", levels(seedrain$species))
-
+levels(seedrain$species)<-gsub("guatemalnsis", "guatemalensis", levels(seedrain$species))
 #check to see what species names are now
 levels(seedrain$species)
 
+##Merge the small fine mesh data in at the end. 
+#Name and specify the file for fine mesh seed rain
+fineseedrain<-read_excel("Lluvia de semillas_RBA_20Apr15.xlsx", sheet=6, col_names=TRUE, na= "NA")
+
+#Change col names to english and abbreviate
+colnames(fineseedrain) <- c("trap", "datecollected", "dategerminated", "seednum", "species", "startgerminate", "roottrainer", "comments")
+
+#remove columns that are not needed
+fineseedrain$dategerminated <- NULL
+fineseedrain$startgerminate <- NULL
+fineseedrain$roottrainer <- NULL
+fineseedrain$comments <- NULL
+
+##merge/join data
+
+
+
+
+
+
+#Add in Mesh type
 seedrain$meshtype <- NA
 
 #Create list of trap numbers
@@ -95,8 +116,11 @@ seedrain <- merge(seedrain, seed_rain_unique, by=c("date", "trap"), all.x=TRUE)
 #check to see which date-trap combos are missing. Check these to see if they were actually collected, but not in database because no seeds were found. 
 date_trap<-as.data.frame(with(seedrain, table(date, trap)))
 date_trap[date_trap$Freq==0 & date_trap$date != "2014-01-21" & date_trap$date!= "2014-01-20",]
- 
-###Practice Creating plots
+
+#Remove overstory tree species or create two groups, one with and one without overstory tree species. 
+
+
+###Practice Creating plots#######################
 #plot(indepdentvar, dependentvar)
 plot(seedrain$trap, seedrain$seednum, xlab="Trap Number", ylab= "Number of Seeds", main= "Total seeds across all traps")
 
@@ -142,7 +166,7 @@ ggplot(totseeds)
 plot(canopysp)
 
 
-#Once finished wrangling save data in a tidy file
+###########Once finished wrangling save data in a tidy file###########
 setwd("../")
 setwd("TidyData")
 write.csv(seedrain,"seedraintidy.csv")
