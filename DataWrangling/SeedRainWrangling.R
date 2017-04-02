@@ -1,5 +1,6 @@
 # This is data munging for seed rain from ECOS project
 #started on 10 feb 17
+#tidy file completed on 2 April 2017
 
 #Load libraries
 library(readxl)
@@ -18,9 +19,13 @@ colnames(seedrain) <- c("week", "date", "trap", "sample", "canopysp", "block", "
 
 #convert all seed species names to lowercase to prevent capitalization errors
 seedrain$species <- tolower(seedrain$species)
+
+#convert species to a factor from a character
+seedrain$species<-as.factor(seedrain$species)
+
 #check to see what species names are now
 levels(seedrain$species)
-
+summary(seedrain$species)
 #change incorrect species names
 levels(seedrain$species)<-gsub("kochnyi", "koschnyi", levels(seedrain$species))
 levels(seedrain$species)<-gsub("seemanii", "seemannii", levels(seedrain$species))
@@ -28,6 +33,12 @@ levels(seedrain$species)<-gsub("tecaphora", "thecaphora", levels(seedrain$specie
 levels(seedrain$species)<-gsub("dominguensis", "domingensis", levels(seedrain$species))
 levels(seedrain$species)<-gsub("Werahuia gladioflora", "Werauhia gladioliflora", levels(seedrain$species))
 levels(seedrain$species)<-gsub("guatemalnsis", "guatemalensis", levels(seedrain$species))
+levels(seedrain$species)<-gsub ("anona papilionella", "annona papilionella", levels(seedrain$species))
+levels(seedrain$species)<-gsub("bursera simarouba", "bursera simaruba", levels(seedrain$species))
+levels(seedrain$species)<-gsub("casearea", "casearia", levels(seedrain$species))
+levels(seedrain$species)<-gsub("alchorneiodes", "alchorneoides", levels(seedrain$species))
+levels(seedrain$species)<- gsub("sapindioides", "sapindoides", levels(seedrain$species))
+levels(seedrain$species)<-gsub("papilosa", "papillosa", levels(seedrain$species))
 #check to see what species names are now
 levels(seedrain$species)
 
@@ -36,12 +47,29 @@ seedrain_new <-read_excel("Lluvia de semillas_RBA_20Apr15_bk_10Mar17.xlsx", shee
 
 #Change col names to english and abbreviate
 colnames(seedrain_new) <- c("trap", "date", "dategerminated", "seednum", "species", "startgerminate", "roottrainer", "comments")
-#Look for species name inconsistencies in new data set
-levels(seedrain_new)
+
+###Look for species name inconsistencies in new data set
+#convert all seed species names to lowercase to prevent capitalization errors
+seedrain_new$species <- tolower(seedrain_new$species)
+
+#convert species to a factor from a character
+seedrain_new$species<-as.factor(seedrain_new$species)
+
+#check species names
+levels(seedrain_new$species)
+
 #Change incorrect species names
+levels(seedrain_new$species)<-gsub("adelobotrys adcendens", "adelobotrys adscendens", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("clidemia crenula", "clidemia crenulata", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("foresteronia myriantha", "Forsteronia myriantha", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("hamelia xenocarpa", "hamelia xerocarpa", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("pyramidatha", "pyramidata", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("warczewiczia", "warszewiczia", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("witheringya asterotrycha", "witheringia asterotricha", levels(seedrain_new$species))
 
 
-
+#Check to make sure names look good
+levels(seedrain_new$species)
 
 #shows what type of variable is in which column
 str(seedrain)
@@ -66,7 +94,7 @@ identical(sort(names(seedrain_all)), sort(names(seedrain_new)))
 seedrain_all <- rbind(seedrain_all, seedrain_new)
 
 
-#Summarise by date, trap and species
+#Summarise by date, trap and species. This step adds up seeds of the same species and data, trap combo so that it is one row with a sum of that species seednum
 seedrain_all <- ddply(seedrain_all, .(date, trap, species), summarise, total_seednum=sum(seednum))
 
 #assigning canopy species, block and quad to a particular trap number
@@ -77,16 +105,15 @@ trap_trt <- ddply(trap_trt, .(trap, canopysp, block, quad), summarise, n=length(
 trap_trt <- trap_trt[,-5]
 
 #check and make sure merged data has same number of rows as seedrain_all originally had
+#Merges data together
 seedrain_all <- merge(seedrain_all, trap_trt, by="trap", all.x=TRUE)
+##VERIFIED THIS DOES ON 2 APRIL 17
 
-
-#merges data together
-seedrain_all <- merge(seedrain_all, trap_trt, by="trap", all.x=TRUE)
 #function to calculate the total seed number across the four treatments
-ddply(seedrain_all, .(canopysp), summarise, total=sum(seednum))
+ddply(seedrain_all, .(canopysp), summarise, total=sum(total_seednum))
 
 
-#################Add in Mesh type
+#################Add in Mesh type#####
 seedrain_all$meshtype <- NA
 
 #Create list of trap numbers
@@ -104,7 +131,7 @@ seedrain_all$meshtype[seedrain_all$trap %in% meshreg] <- "meshreg"
 #brackets tell which row should be pulled out
 
 
-###Next section involves finding the number of days a trap was set out for
+###Next section involves finding the number of days a trap was set out for####
 #Make date a character
 seedrain_all$date <- as.character(seedrain_all$date)
 
@@ -141,97 +168,56 @@ date_trap<-as.data.frame(with(seedrain, table(date, trap)))
 date_trap[date_trap$Freq==0 & date_trap$date != "2014-01-21" & date_trap$date!= "2014-01-20",]
 #Fixed the above issue with dates on 11 Mar 17
 
-###
+###csv file for all of the data
+setwd("../")
+setwd("TidyData")
+write.csv(seedrain_all,"seedrain_alltidy.csv")
 
+##create csv file for data without overstory species included###
 #This removes the overstory species from the dataset 
-removed_species <- seedrain_all[-which(seedrain_all$species%in%c("species1", "species2", "species3", "species4")),]
+removed_species <- seedrain_all[-which(seedrain_all$species%in%c("hieronyma alchorneoides", "pentaclethra macroloba", "virola koschnyi", "vochysia guatemalensis")),]
 
-#add code to write this as a csv file and export it as a unique dataset
+#write this as a csv file and export it as a unique dataset
+write.csv(removed_species, "seedrain_nocanopysp_tidy.csv")
+
 
 ########
+#####Small mesh, two data sets, one with overstory sp. included and one without.
 #Create data set with just meshsmall traps
-seedrain_smallmesh <- seedrain[seedrain$meshtype=="meshsmall",]
+seedrain_smallmesh <- seedrain_all[seedrain_all$meshtype=="meshsmall",]
+#write csv file for all data with small mesh
+write.csv(seedrain_smallmesh, "smallmesh_tidy.csv")
 
+#create data set with smallmesh and no overstory species (NOS) included
+seedrain_smallmesh_NOS <- removed_species[removed_species$meshtype=="meshsmall",]
+#write csv file for all data with small mesh and no overstory species included
+write.csv(seedrain_smallmesh_NOS, "smallmesh_NOS_tidy.csv")
+
+###regular mesh, two data sets, one with overstory sp. included and one without.
 #Create data set with just regmesh raps
-seedrain_regmesh <- seedrain[seedrain$meshtype=="meshreg",]
-#Remove overstory tree species or create two groups, one with and one without overstory tree species. 
+seedrain_regmesh <- seedrain_all[seedrain_all$meshtype=="meshreg",]
+#write csv file for all data with reg mesh
+write.csv(seedrain_regmesh, "regmesh_tidy.csv")
+
+#create data set with reg mesh and no overstory species (NOS) included
+seedrain_regmesh_NOS <- removed_species[removed_species$meshtype=="meshreg",]
+#write csv file for data with reg mesh and no overstory species included
+write.csv(seedrain_regmesh_NOS, "regmesh_NOS_tidy.csv")
+
 
 ####CREATING NMDS DATA##########################################################
 #Create species columns for use in NMDS and ordination
 species_data <- dcast(seedrain_all, date+trap ~ species, value.var="total_seednum")
 
-#
+#identifies all seed rain species that are NA
 species_data <- species_data[, -which(names(species_data)=="NA")]
 #Replace NA's with zeros
 species_data[is.na(species_data)] <- 0
 
+#species data is merged with new data and reorganized so that species are columns with abundances of seed
 species_data2 <- merge(species_data, trap_trt, by=c("trap"), all.x=TRUE)
 species_data2 <- species_data2[,c(1,2,ncol(species_data2), (3:ncol(species_data2)-1))]
 species_data2 <- species_data2[,-which(names(species_data2)=="date.1")]
 #create csv file that can be used to do NMDS calculations
 write.csv(species_data, "species_data.csv")
-
-###Practice Creating plots#######################
-#Species column is turned into a factor
-seedrain$species<-as.factor(seedrain$species)
-summary(seedrain$species)
-#made canopysp a factor
-seedrain$canopysp<-as.factor(seedrain$canopysp)
-summary(seedrain$canopysp) #not sure this is needed
-
-#plot(indepdentvar, dependentvar)
-plot(seedrain$trap, seedrain$seednum, xlab="Trap Number", ylab= "Number of Seeds", main= "Total seeds across all traps")
-
-#categorical x --This produces the total number of observations for each canopysp
-ggplot(seedrain, aes(canopysp))+
-  geom_bar(stat="count") #default stat for geom_bar is count. Count takes a count of the number of cases, need categorical x variable, and no y-variable. 
-
-#plot x and y variables--This produces the total number of seeds found in each plot
-ggplot(seedrain, aes(meshtype, seednum))+
-  geom_boxplot()
-ggplot(seedrain, aes(canopysp, seednum))+
-  geom_violin()
-ggplot(seedrain, aes(species, seednum))+
-  geom_boxplot()
-
-##categorical variables can have tables that use frequencies or proportions
-#This will give the total number of observations in each group
-table(seedrain$canopysp)
-#This will give you all the observations for a particular variable
-length(seedrain$canopysp)
-#this will produce a two-way table
-table(seedrain$canopysp, seedrain$meshtype)
-
-###numerical values produce means, medians, variance var(), sd, range, min, max
-canopysp<-(seedrain$canopysp)
-species<-(seedrain$species)
-boxplot(canopysp~species)
-
-library(dplyr)
-ddply(seedrain, "canopysp", summarise, 
-      sppnum = length(unique(species)))
-##below does not work
- ggplot("trap", aes("canopysp", "block"))+
-  +     geom_violin()
-
-speciessum <- mean(seedrain$species, seedrain$canopysp)
-
-ggplot("canopysp")
-
-ggplot("trap")
-totseeds <- sum(seedrain$seednum)
-ggplot(totseeds)
-plot(canopysp)
-
-
-###########Once finished wrangling save data in a tidy file###########
-setwd("../")
-setwd("TidyData")
-write.csv(seedrain,"seedraintidy.csv")
-#csv is now in tidy data
-
-
-
-
-
 
