@@ -1,16 +1,18 @@
 #Analysis of seedrain data
+##attempts started 1 APril 2017
+
 #bring in seedraintidy data
-seedrain<-read.csv("seedraintidy.csv")
+seedrain<-read.csv("seedrain_alltidy.csv")
 
 #summed across all seed rain
-sumseedrain<-ddply(seedrain, .(canopysp,block), summarize, totalseed=sum(seednum))
+sumseedrain<-ddply(seedrain, .(canopysp,block), summarize, totalseed=sum(total_seednum))
 ggplot(sumseedrain, aes(canopysp, totalseed))+
   geom_boxplot()
 
 
 #diversity analysis
 library(vegan)
-diversity(x, index = "shannon", MARGIN = 1, base = exp(1))
+diversity(seedrain, index = "shannon", MARGIN = 1, base = exp(1))
 
 
 #richness analysis
