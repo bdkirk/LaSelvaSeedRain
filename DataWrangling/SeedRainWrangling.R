@@ -39,6 +39,7 @@ levels(seedrain$species)<-gsub("casearea", "casearia", levels(seedrain$species))
 levels(seedrain$species)<-gsub("alchorneiodes", "alchorneoides", levels(seedrain$species))
 levels(seedrain$species)<- gsub("sapindioides", "sapindoides", levels(seedrain$species))
 levels(seedrain$species)<-gsub("papilosa", "papillosa", levels(seedrain$species))
+levels(seedrain$species)<-gsub("conostegia crenula", "clidemia crenulata", levels(seedrain$species))
 #check to see what species names are now
 levels(seedrain$species)
 
@@ -66,7 +67,7 @@ levels(seedrain_new$species)<-gsub("hamelia xenocarpa", "hamelia xerocarpa", lev
 levels(seedrain_new$species)<-gsub("pyramidatha", "pyramidata", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("warczewiczia", "warszewiczia", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("witheringya asterotrycha", "witheringia asterotricha", levels(seedrain_new$species))
-
+levels(seedrain_new$species)<-gsub("conostegia densiflora", "miconia approximata", levels(seedrain_new$species))
 
 #Check to make sure names look good
 levels(seedrain_new$species)
@@ -208,7 +209,6 @@ write.csv(seedrain_regmesh_NOS, "regmesh_NOS_tidy.csv")
 ####CREATING NMDS DATA##########################################################
 #Create species columns for use in NMDS and ordination
 species_data <- dcast(seedrain_all, date+trap ~ species, value.var="total_seednum")
-
 #identifies all seed rain species that are NA
 species_data <- species_data[, -which(names(species_data)=="NA")]
 #Replace NA's with zeros
@@ -221,8 +221,8 @@ species_data2 <- species_data2[,-which(names(species_data2)=="date.1")]
 #create csv file that can be used to do NMDS calculations
 write.csv(species_data2, "species_data.csv")
 
-
-##Create a file with no overstory species
+###################
+#####Create a file with no overstory species
 ovsty_rem<- dcast(removed_species, date+trap ~ species, value.var="total_seednum")
 #identifies all seed rain species that are NA
 ovsty_rem <- ovsty_rem[, -which(names(ovsty_rem)=="NA")]
@@ -236,4 +236,64 @@ ovsty_rem2 <- ovsty_rem2[,-which(names(ovsty_rem2)=="date.1")]
 #create csv file that can be used to do NMDS calculations
 write.csv(ovsty_rem2, "NMDS_ovsty_rem.csv")
 
+############
+####create a file with small mesh, overstory removed
+small_rem<- dcast(seedrain_smallmesh_NOS, date+trap ~ species, value.var="total_seednum")
+#identifies all seed rain species that are NA
+small_rem <- small_rem[, -which(names(small_rem)=="NA")]
+#Replace NA's with zeros
+small_rem[is.na(small_rem)] <- 0
 
+#species data is merged with new data and reorganized so that species are columns with abundances of seed
+small_rem2 <- merge(small_rem, trap_trt, by=c("trap"), all.x=TRUE)
+small_rem2 <- small_rem2[,c(1,2,ncol(small_rem2), (3:ncol(small_rem2)-1))]
+small_rem2 <- small_rem2[,-which(names(small_rem2)=="date.1")]
+#create csv file that can be used to do NMDS calculations
+write.csv(small_rem2, "NMDS_small_rem.csv")
+
+############
+###Create a file with reg mesh, overstory removed
+reg_rem<- dcast(seedrain_regmesh_NOS, date+trap ~ species, value.var="total_seednum")
+#identifies all seed rain species that are NA
+reg_rem <- reg_rem[, -which(names(reg_rem)=="NA")]
+#Replace NA's with zeros
+reg_rem[is.na(reg_rem)] <- 0
+
+#species data is merged with new data and reorganized so that species are columns with abundances of seed
+reg_rem2 <- merge(reg_rem, trap_trt, by=c("trap"), all.x=TRUE)
+reg_rem2 <- reg_rem2[,c(1,2,ncol(reg_rem2), (3:ncol(reg_rem2)-1))]
+reg_rem2 <- reg_rem2[,-which(names(reg_rem2)=="date.1")]
+#create csv file that can be used to do NMDS calculations
+write.csv(reg_rem2, "NMDS_reg_rem.csv")
+
+############
+###Create a file with small mesh, overstory included
+small_all<- dcast(seedrain_smallmesh, date+trap ~ species, value.var="total_seednum")
+#identifies all seed rain species that are NA
+small_all <- small_all[, -which(names(small_all)=="NA")]
+#Replace NA's with zeros
+small_all[is.na(small_all)] <- 0
+
+#species data is merged with new data and reorganized so that species are columns with abundances of seed
+small_all2 <- merge(small_all, trap_trt, by=c("trap"), all.x=TRUE)
+small_all2 <- small_all2[,c(1,2,ncol(small_all2), (3:ncol(small_all2)-1))]
+small_all2 <- small_all2[,-which(names(small_all2)=="date.1")]
+#create csv file that can be used to do NMDS calculations
+write.csv(small_all2, "NMDS_small_all.csv")
+
+###########
+####Create a file with reg mesh, overstory included
+reg_all<- dcast(seedrain_regmesh, date+trap ~ species, value.var="total_seednum")
+#identifies all seed rain species that are NA
+reg_all <- reg_all[, -which(names(reg_all)=="NA")]
+#Replace NA's with zeros
+reg_all[is.na(reg_all)] <- 0
+
+#species data is merged with new data and reorganized so that species are columns with abundances of seed
+reg_all2 <- merge(reg_all, trap_trt, by=c("trap"), all.x=TRUE)
+reg_all2 <- reg_all2[,c(1,2,ncol(reg_all2), (3:ncol(reg_all2)-1))]
+reg_all2 <- reg_all2[,-which(names(reg_all2)=="date.1")]
+#create csv file that can be used to do NMDS calculations
+write.csv(reg_all2, "NMDS_reg_all.csv")
+
+#all files were written 5 April 2017
