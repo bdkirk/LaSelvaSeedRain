@@ -219,5 +219,21 @@ species_data2 <- merge(species_data, trap_trt, by=c("trap"), all.x=TRUE)
 species_data2 <- species_data2[,c(1,2,ncol(species_data2), (3:ncol(species_data2)-1))]
 species_data2 <- species_data2[,-which(names(species_data2)=="date.1")]
 #create csv file that can be used to do NMDS calculations
-write.csv(species_data, "species_data.csv")
+write.csv(species_data2, "species_data.csv")
+
+
+##Create a file with no overstory species
+ovsty_rem<- dcast(removed_species, date+trap ~ species, value.var="total_seednum")
+#identifies all seed rain species that are NA
+ovsty_rem <- ovsty_rem[, -which(names(ovsty_rem)=="NA")]
+#Replace NA's with zeros
+ovsty_rem[is.na(ovsty_rem)] <- 0
+
+#species data is merged with new data and reorganized so that species are columns with abundances of seed
+ovsty_rem2 <- merge(ovsty_rem, trap_trt, by=c("trap"), all.x=TRUE)
+ovsty_rem2 <- ovsty_rem2[,c(1,2,ncol(ovsty_rem2), (3:ncol(ovsty_rem2)-1))]
+ovsty_rem2 <- ovsty_rem2[,-which(names(ovsty_rem2)=="date.1")]
+#create csv file that can be used to do NMDS calculations
+write.csv(ovsty_rem2, "NMDS_ovsty_rem.csv")
+
 
