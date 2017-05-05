@@ -31,7 +31,6 @@ levels(seedrain$species)<-gsub("kochnyi", "koschnyi", levels(seedrain$species))
 levels(seedrain$species)<-gsub("seemanii", "seemannii", levels(seedrain$species))
 levels(seedrain$species)<-gsub("tecaphora", "thecaphora", levels(seedrain$species))
 levels(seedrain$species)<-gsub("dominguensis", "domingensis", levels(seedrain$species))
-levels(seedrain$species)<-gsub("Werahuia gladioflora", "Werauhia gladioliflora", levels(seedrain$species))
 levels(seedrain$species)<-gsub("guatemalnsis", "guatemalensis", levels(seedrain$species))
 levels(seedrain$species)<-gsub ("anona papilionella", "annona papilionella", levels(seedrain$species))
 levels(seedrain$species)<-gsub("bursera simarouba", "bursera simaruba", levels(seedrain$species))
@@ -40,6 +39,7 @@ levels(seedrain$species)<-gsub("alchorneiodes", "alchorneoides", levels(seedrain
 levels(seedrain$species)<- gsub("sapindioides", "sapindoides", levels(seedrain$species))
 levels(seedrain$species)<-gsub("papilosa", "papillosa", levels(seedrain$species))
 levels(seedrain$species)<-gsub("conostegia crenula", "clidemia crenulata", levels(seedrain$species))
+levels(seedrain$species) <- gsub("aerugynosa", "aeruginosa", levels(seedrain$species))
 #check to see what species names are now
 levels(seedrain$species)
 
@@ -110,15 +110,23 @@ trap_trt <- trap_trt[,-5]
 seedrain_all <- merge(seedrain_all, trap_trt, by="trap", all.x=TRUE)
 ##VERIFIED THIS DOES ON 2 APRIL 17
 
+####### Testing Functions #####
 #function to calculate the total seed number across the four treatments and the four blocks
 seed_b_c <- ddply(seedrain_all, .(canopysp, block), summarise, total=sum(total_seednum))
 seed_b_c
+
+#funciton used to calculate the total number of seeds for each of the species in seed rain
+species_seeds <- ddply(seedrain_all, .(species), summarise, total=sum(total_seednum))
+species_seeds
+
+seed_2 <- ddply(seedrain_all, .(canopysp, species), summarise, total=sum(total_seednum))
+seed_2
 #function to calculate the total seed number across the four blocks
 seed_b <- ddply(seedrain_all, .(block), summarise, total=sum(total_seednum))
 seed_b
 #function to calculate the total seed number across the four overstory treatments
 seed_c <- ddply(seedrain_all, .(canopysp), summarise, total=sum(total_seednum))
-
+seed_c
 #################Add in Mesh type#####
 seedrain_all$meshtype <- NA
 
@@ -166,6 +174,11 @@ for (i in 1:{nrow(seed_rain_unique)}){
 #Take out the n variable
 seed_rain_unique <- seed_rain_unique[,-which(names(seed_rain_unique)=="n")]
 
+#Calculate the total number of days each trap was out
+trapdays <- ddply(seed_rain_unique, .(trap), summarise, total=sum(days))
+trapdays
+
+##################################################
 #Merge the days variable back into the main data set
 seedrain_all <- merge(seedrain_all, seed_rain_unique, by=c("date", "trap"), all.x=TRUE)
 
@@ -177,6 +190,7 @@ date_trap[date_trap$Freq==0 & date_trap$date != "2014-01-21" & date_trap$date!= 
 #This sums up the traps according to species
 seedrain_final <- ddply(seedrain_all, .(trap, species), summarise, seednum=sum(total_seednum))
 
+write.csv(seedrain_final, "tot_seed_by_species_and_trap.csv", row.names = FALSE)
 #merge this into seedrain_all
 #This adds in canopy species by matching them with the trap from the other data
 #original$column <- new$column[match(original$column, new$column)]
@@ -186,7 +200,9 @@ seedrain_final$quad <- seedrain_all$quad[match(seedrain_final$trap, seedrain_all
 seedrain_final$meshtype <- seedrain_all$meshtype[match(seedrain_final$trap, seedrain_all$trap)]
 seedrain_final$days <- seedrain_all$days[match(seedrain_final$trap, seedrain_all$trap)]
 
-
+str(seedrain_final)
+seedrain_final$block <-as.factor(seedrain_final$block)
+seedrain_final$trap <- as.factor(seedrain_final$trap)
 ###csv file for all of the data
 setwd("../")
 setwd("TidyData")
@@ -294,3 +310,4 @@ write.csv(reg_all, "NMDS_reg_all.csv", row.names = FALSE)
 
 #all files were written 5 April 2017
 #Then they were rewritten 6 April 2017
+
