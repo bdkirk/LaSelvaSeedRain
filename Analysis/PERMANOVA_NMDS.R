@@ -6,9 +6,9 @@ library(ggplot2); library(vegan); library(geomorph)
 #set wd
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
-##  --------------------------------------------------------------------------------------------------------------------------------------  ##
+##  ---------------------------------------------------
 # Function for Plotting NMS results (Nick Lyon's code)
-##  --------------------------------------------------------------------------------------------------------------------------------------  ##
+##  ---------------------------------------------------
 
 # Function that plots NMS points with different colors for groups (only works for 4 groups)
 ## mod = object returned by metaMDS
@@ -80,6 +80,9 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
 speciesdata <- read.csv("species_data.csv")
 ncol(speciesdata)
 str(speciesdata[,1:10])
+speciesdata$block <-as.factor(speciesdata$block)
+speciesdata$trap <- as.factor(speciesdata$trap)
+str(speciesdata)
 
 seedspecies <- speciesdata[,7:143]
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
@@ -97,7 +100,7 @@ nmsplot(seedspecies.mds, speciesdata$canopysp, "Hial", "Vogu", "Pema", "Viko",
 #I am not sure what this does.
 stressplot(seedspecies.mds)
 
-
+#HERE#
 #####All data with no overstory species included###############################
 #Bring data in
 ovsty_rem_nmds <- read.csv("NMDS_ovsty_rem.csv")
