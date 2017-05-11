@@ -14,60 +14,11 @@ setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
 #######  1) Repeated Months comparison  #######
 
-#Read in data; this file was from original sr_all_tidy file created through SeedRainWrangling that was clipped to include only the pertinent months.
-twomonths <- read.csv("sr_all_tidy_TWOMONTHS.csv")
+#Read in data; this includes overstory species as well.  Should not matter because you will be sorting according to most abundant species.
+phenology <- read.csv("seedrain_all_tidy.csv")
+# This is the file with species removed "seedrain_nocanopysp_tidy.csv"
 
-#Assign 15 plot names
-#Create a new column and fill with NA
-twomonths$plot <- NA
-
-#Create list of plot numbers
-plot_numbers <- seq(1:75)
-#Create list of plots with canopysp_block combo
-hial1 <- c(1, 2, 3, 4, 5)
-viko1 <- c(6, 7, 8, 9, 10)
-pema1 <- c(11, 12, 13, 14, 15)
-hial2 <- c(16, 17, 18, 19, 20)
-viko2 <- c(21, 22, 23, 24, 25)
-pema2 <- c(26, 27, 28, 29, 30)
-vogu2 <- c(31, 32, 33, 34, 35)
-hial3 <- c(36, 37, 38, 39, 40)
-viko3 <- c(41, 42, 43, 44, 45)
-pema3 <- c(46, 47, 48, 49, 50)
-vogu3 <- c(51, 52, 53, 54, 55)
-hial4 <- c(56, 57, 58, 59, 60)
-viko4 <- c(61, 62, 63, 64, 65)
-pema4 <- c(66, 67, 68, 69, 70)
-vogu4 <- c(71, 72, 73, 74, 75)
-
-#Assign plots to traps (15 plots)
-twomonths$plot[twomonths$trap %in% hial1] <- "hial1"
-twomonths$plot[twomonths$trap %in% hial2] <- "hial2"
-twomonths$plot[twomonths$trap %in% hial3] <- "hial3"
-twomonths$plot[twomonths$trap %in% hial4] <- "hial4"
-twomonths$plot[twomonths$trap %in% pema1] <- "pema1"
-twomonths$plot[twomonths$trap %in% pema2] <- "pema2"
-twomonths$plot[twomonths$trap %in% pema3] <- "pema3"
-twomonths$plot[twomonths$trap %in% pema4] <- "pema4"
-twomonths$plot[twomonths$trap %in% viko1] <- "viko1"
-twomonths$plot[twomonths$trap %in% viko2] <- "viko2"
-twomonths$plot[twomonths$trap %in% viko3] <- "viko3"
-twomonths$plot[twomonths$trap %in% viko4] <- "viko4"
-twomonths$plot[twomonths$trap %in% vogu2] <- "vogu2"
-twomonths$plot[twomonths$trap %in% vogu3] <- "vogu3"
-twomonths$plot[twomonths$trap %in% vogu4] <- "vogu4"
-
-#check which values are factors and which are integers
-str(twomonths)
-
-#convert all seed species names to lowercase to prevent capitalization errors
-twomonths$species <- tolower(twomonths$species)
-
-#Change necessary items to different
-twomonths$plot <- as.factor(twomonths$plot)
-twomonths$species <- as.factor(twomonths$species)
-levels(twomonths$species)
-
+######THIS IS WHERE YOU NEED TO START FROM####
 
 #Summarise by date, plot and species. This step adds up seeds of the same species and data, plot combo so that there are several rows with a sum of that species seednum
 dp_seed <- ddply(twomonths, .(Date.out, plot, species), summarise, total_seednum=sum(total_seednum))
