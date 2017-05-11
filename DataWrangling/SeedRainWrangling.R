@@ -3,16 +3,13 @@
 #tidy file completed on 2 April 2017
 
 #Load libraries
-library(readxl)
-library(plyr)
-library(ggplot2)
-library(reshape2)
+library(readxl); library(plyr); library(ggplot2); library(reshape2); library(base)
 
 #set working directory to folder
 setwd("Data/RawData")
 
 #naming datafile seedrain from excel file and pulling data from sheet 4
-seedrain<-read_excel("Lluvia de semillas_RBA_20Apr15_bk_10Mar17.xlsx", sheet=4, col_names=TRUE, na= "NA")
+seedrain <-read_excel("Lluvia de semillas_RBA_20Apr15_bk_10Mar17.xlsx", sheet=4, col_names=TRUE, na= "NA")
 
 #Change col names to english and abbreviate
 colnames(seedrain) <- c("week", "date", "trap", "sample", "canopysp", "block", "quad", "type", "species", "fruitnum", "seednum", "poop", "damaged", "obs")
@@ -100,7 +97,6 @@ seedrain_all <- ddply(seedrain_all, .(date, trap, species), summarise, total_see
 
 #assigning canopy species, block and quad to a particular trap number
 ##want to add in overstory treatment to new dataset by matching it to trap
-
 trap_trt <- seedrain[, c("trap", "canopysp", "block", "quad")]
 trap_trt <- ddply(trap_trt, .(trap, canopysp, block, quad), summarise, n=length(quad))
 trap_trt <- trap_trt[,-5]
@@ -109,6 +105,7 @@ trap_trt <- trap_trt[,-5]
 #Merges data together
 seedrain_all <- merge(seedrain_all, trap_trt, by="trap", all.x=TRUE)
 ##VERIFIED THIS DOES ON 2 APRIL 17
+
 
 ####### Testing Functions #####
 #function to calculate the total seed number across the four treatments and the four blocks
@@ -127,6 +124,9 @@ seed_b
 #function to calculate the total seed number across the four overstory treatments
 seed_c <- ddply(seedrain_all, .(canopysp), summarise, total=sum(total_seednum))
 seed_c
+
+
+
 #################Add in Mesh type#####
 seedrain_all$meshtype <- NA
 
@@ -187,127 +187,89 @@ date_trap<-as.data.frame(with(seedrain, table(date, trap)))
 date_trap[date_trap$Freq==0 & date_trap$date != "2014-01-21" & date_trap$date!= "2014-01-20",]
 #Fixed the above issue with dates on 11 Mar 17
 
-#This sums up the traps according to species
-seedrain_final <- ddply(seedrain_all, .(trap, species), summarise, seednum=sum(total_seednum))
+##########################################
+#add in plot column to identify the 15 different plots
+seedrain_all$plot <- NA
 
-write.csv(seedrain_final, "tot_seed_by_species_and_trap.csv", row.names = FALSE)
-#merge this into seedrain_all
-#This adds in canopy species by matching them with the trap from the other data
-#original$column <- new$column[match(original$column, new$column)]
-seedrain_final$canopysp <- seedrain_all$canopysp[match(seedrain_final$trap, seedrain_all$trap)]
-seedrain_final$block <- seedrain_all$block[match(seedrain_final$trap, seedrain_all$trap)]
-seedrain_final$quad <- seedrain_all$quad[match(seedrain_final$trap, seedrain_all$trap)]
-seedrain_final$meshtype <- seedrain_all$meshtype[match(seedrain_final$trap, seedrain_all$trap)]
-seedrain_final$days <- seedrain_all$days[match(seedrain_final$trap, seedrain_all$trap)]
+plot_numbers <- seq(1:75)
+#Create list of plots with canopysp_block combo
+hial1 <- c(1, 2, 3, 4, 5)
+viko1 <- c(6, 7, 8, 9, 10)
+pema1 <- c(11, 12, 13, 14, 15)
+hial2 <- c(16, 17, 18, 19, 20)
+viko2 <- c(21, 22, 23, 24, 25)
+pema2 <- c(26, 27, 28, 29, 30)
+vogu2 <- c(31, 32, 33, 34, 35)
+hial3 <- c(36, 37, 38, 39, 40)
+viko3 <- c(41, 42, 43, 44, 45)
+pema3 <- c(46, 47, 48, 49, 50)
+vogu3 <- c(51, 52, 53, 54, 55)
+hial4 <- c(56, 57, 58, 59, 60)
+viko4 <- c(61, 62, 63, 64, 65)
+pema4 <- c(66, 67, 68, 69, 70)
+vogu4 <- c(71, 72, 73, 74, 75)
 
-str(seedrain_final)
-seedrain_final$block <-as.factor(seedrain_final$block)
-seedrain_final$trap <- as.factor(seedrain_final$trap)
+#Assign plots to traps (15 plots)
+seedrain_all$plot[seedrain_all$trap %in% hial1] <- "hial1"
+seedrain_all$plot[seedrain_all$trap %in% hial2] <- "hial2"
+seedrain_all$plot[seedrain_all$trap %in% hial3] <- "hial3"
+seedrain_all$plot[seedrain_all$trap %in% hial4] <- "hial4"
+seedrain_all$plot[seedrain_all$trap %in% pema1] <- "pema1"
+seedrain_all$plot[seedrain_all$trap %in% pema2] <- "pema2"
+seedrain_all$plot[seedrain_all$trap %in% pema3] <- "pema3"
+seedrain_all$plot[seedrain_all$trap %in% pema4] <- "pema4"
+seedrain_all$plot[seedrain_all$trap %in% viko1] <- "viko1"
+seedrain_all$plot[seedrain_all$trap %in% viko2] <- "viko2"
+seedrain_all$plot[seedrain_all$trap %in% viko3] <- "viko3"
+seedrain_all$plot[seedrain_all$trap %in% viko4] <- "viko4"
+seedrain_all$plot[seedrain_all$trap %in% vogu2] <- "vogu2"
+seedrain_all$plot[seedrain_all$trap %in% vogu3] <- "vogu3"
+seedrain_all$plot[seedrain_all$trap %in% vogu4] <- "vogu4"
+
+#remove unnecessary columns
+seedrain_all$min <- NULL
+
+#make columns appropriate variable
+seedrain_all$block <-as.factor(seedrain_all$block)
+seedrain_all$meshtype <- as.factor(seedrain_all$meshtype)
+seedrain_all$trap <- as.factor(seedrain_all$trap)
+seedrain_all$plot <- as.factor(seedrain_all$plot)
+seedrain_all$canopysp <- as.factor(seedrain_all$canopysp)
+str(seedrain_all)
+
+
 ###csv file for all of the data
 setwd("../")
 setwd("TidyData")
-write.csv(seedrain_final,"seedrain_alltidy.csv", row.names = FALSE)
+
+#This file has correct dates that can be used to compare the two repeated months of data collection
+write.csv(seedrain_all, "seedrain_all_tidy.csv", row.names = FALSE)
+
 
 ##create csv file for data without overstory species included####
 #This removes the overstory species from the dataset 
-removed_species <- seedrain_final[-which(seedrain_final$species%in%c("hieronyma alchorneoides", "pentaclethra macroloba", "virola koschnyi", "vochysia guatemalensis")),]
+removed_species <- seedrain_all[-which(seedrain_all$species%in%c("hieronyma alchorneoides", "pentaclethra macroloba", "virola koschnyi", "vochysia guatemalensis")),]
 
 #write this as a csv file and export it as a unique dataset
 write.csv(removed_species, "seedrain_nocanopysp_tidy.csv", row.names = FALSE)
 
+#######creating a subset of data for one years worth of data
+# Decided to clip off the first month and the last month because were getting used to data collection the first month and were rushing in the last month
+# Will create a subset of removed_species to use
+removed_species$date <- as.character(removed_species$date)
+removed_sub <- subset(removed_species, date > "2014-02-23" & date < "2015-02-24")
 
+removed_sub$date <- as.factor(removed_sub$date)
 
-#####Small mesh, two data sets, one with overstory sp. included and one without. ########
-#Create data set with just meshsmall traps
-seedrain_smallmesh <- seedrain_final[seedrain_final$meshtype=="meshsmall",]
-#write csv file for all data with small mesh
-write.csv(seedrain_smallmesh, "smallmesh_tidy.csv", row.names = FALSE)
+summary(removed_sub$date)
 
-#create data set with smallmesh and no overstory species (NOS) included
-seedrain_smallmesh_NOS <- removed_species[removed_species$meshtype=="meshsmall",]
-#write csv file for all data with small mesh and no overstory species included
-write.csv(seedrain_smallmesh_NOS, "smallmesh_NOS_tidy.csv", row.names = FALSE)
+###HAHAH it worked. And what R!!!
 
-###regular mesh, two data sets, one with overstory sp. included and one without.#########
-#Create data set with just regmesh raps
-seedrain_regmesh <- seedrain_final[seedrain_final$meshtype=="meshreg",]
-#write csv file for all data with reg mesh
-write.csv(seedrain_regmesh, "regmesh_tidy.csv", row.names = FALSE)
-
-#create data set with reg mesh and no overstory species (NOS) included
-seedrain_regmesh_NOS <- removed_species[removed_species$meshtype=="meshreg",]
-#write csv file for data with reg mesh and no overstory species included
-write.csv(seedrain_regmesh_NOS, "regmesh_NOS_tidy.csv", row.names = FALSE)
-
-
-####CREATING NMDS DATA##########################################################
-#Create species columns for use in NMDS and ordination
-
-# DO NOT NEED THIS ORDER BELOW- seedrain_final <- seedrain_final[order(seedrain_final$species),]
-#dcast makes this long data go wide.  You specify the dcast(datafile, columns + you  + want + to + stay + long ~column you want to go wide, value.var"column you want to be the variable")
-species_data <- dcast(seedrain_final, trap + canopysp + block + quad + meshtype + days ~ species, value.var="seednum")
-#This sorts the data after it is created
-species_data <- species_data[,c(names(species_data)[1:6],sort(names(species_data)[7:ncol(species_data)]))]
-#identifies all seed rain species that are NA
-species_data <- species_data[, -which(names(species_data)=="NA")]
-#Replace NA's with zeros
-species_data[is.na(species_data)] <- 0
-
-#create csv file that can be used to do NMDS calculations
-write.csv(species_data, "species_data.csv", row.names = FALSE)
-
-
-#####Create a file with no overstory species#####
-ovsty_rem<- dcast(removed_species, trap + canopysp + block + quad + meshtype + days ~ species, value.var="seednum")
-#identifies all seed rain species that are NA
-ovsty_rem <- ovsty_rem[, -which(names(ovsty_rem)=="NA")]
-#Replace NA's with zeros
-ovsty_rem[is.na(ovsty_rem)] <- 0
-#create csv file that can be used to do NMDS calculations
-write.csv(ovsty_rem, "NMDS_ovsty_rem.csv", row.names = FALSE)
-
-
-####create a file with small mesh, overstory removed######
-small_rem<- dcast(seedrain_smallmesh_NOS, trap + canopysp + block + quad + meshtype + days ~ species, value.var="seednum")
-#identifies all seed rain species that are NA
-small_rem <- small_rem[, -which(names(small_rem)=="NA")]
-#Replace NA's with zeros
-small_rem[is.na(small_rem)] <- 0
-
-#create csv file that can be used to do NMDS calculations
-write.csv(small_rem, "NMDS_small_rem.csv", row.names = FALSE)
-
-
-###Create a file with reg mesh, overstory removed#####
-reg_rem<- dcast(seedrain_regmesh_NOS, trap + canopysp + block + quad + meshtype + days ~ species, value.var="seednum")
-#identifies all seed rain species that are NA
-reg_rem <- reg_rem[, -which(names(reg_rem)=="NA")]
-#Replace NA's with zeros
-reg_rem[is.na(reg_rem)] <- 0
-#create csv file that can be used to do NMDS calculations
-write.csv(reg_rem, "NMDS_reg_rem.csv", row.names = FALSE)
-
-
-###Create a file with small mesh, overstory included#####
-small_all<- dcast(seedrain_smallmesh, trap + canopysp + block + quad + meshtype + days ~ species, value.var="seednum")
-#identifies all seed rain species that are NA
-small_all <- small_all[, -which(names(small_all)=="NA")]
-#Replace NA's with zeros
-small_all[is.na(small_all)] <- 0
-#create csv file that can be used to do NMDS calculations
-write.csv(small_all, "NMDS_small_all.csv", row.names = FALSE)
-
-
-####Create a file with reg mesh, overstory included####
-reg_all<- dcast(seedrain_regmesh, trap + canopysp + block + quad + meshtype + days ~ species, value.var="seednum")
-#identifies all seed rain species that are NA
-reg_all <- reg_all[, -which(names(reg_all)=="NA")]
-#Replace NA's with zeros
-reg_all[is.na(reg_all)] <- 0
-#create csv file that can be used to do NMDS calculations
-write.csv(reg_all, "NMDS_reg_all.csv", row.names = FALSE)
+#Write as a new csv for the subset with removed canopy
+write.csv(removed_sub, "yearsub_no_cpysp.csv", row.names = FALSE)
 
 
 #all files were written 5 April 2017
 #Then they were rewritten 6 April 2017
+# (hopefully) Finals were rewritten 11 May 2017
 
