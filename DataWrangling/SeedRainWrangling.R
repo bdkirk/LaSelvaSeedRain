@@ -242,7 +242,7 @@ str(seedrain_all)
 setwd("../")
 setwd("TidyData")
 
-#This file has correct dates that can be used to compare the two repeated months of data collection
+#This file contains all the original data including overstory species
 write.csv(seedrain_all, "seedrain_all_tidy.csv", row.names = FALSE)
 
 
