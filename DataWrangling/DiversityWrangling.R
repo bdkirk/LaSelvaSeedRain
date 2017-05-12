@@ -15,7 +15,7 @@ seeddiv <- read.csv("yearsub_no_cpysp.csv")
 #summarise the data by plot
 plotsum <- ddply(seeddiv, .(plot, species), summarise, seednum=sum(total_seednum))
 
-####CREATING NMDS DATA##########################################################
+####CREATING WIDE DATA##########################################################
 #Create species columns to have data in wide format
 #dcast makes this long data go wide.  You specify the dcast(datafile, columns + you  + want + to + stay + long ~column you want to go wide, value.var="column you want to be the variable")
 species_data <- dcast(plotsum, plot ~ species, value.var="seednum")
@@ -28,6 +28,8 @@ species_data[is.na(species_data)] <- 0
 
 #create csv file that can be used to do NMDS calculations
 write.csv(species_data, "div_sub_nocpy.csv", row.names = FALSE)
+
+#finished on 11 May 2017
 
 ##This data file has no overstory species and is subsetted for a year long period from 2-24-14 to 2-23-15
 
