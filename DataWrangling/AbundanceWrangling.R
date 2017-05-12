@@ -21,3 +21,5 @@ abund <- ddply(abundance, .(plot), summarise, total_seednum=sum(total_seednum))
 
 write.csv (abund, "abund_sub_nocpy.csv", row.names = FALSE)
 
+
+# finished on 11 May 2017
