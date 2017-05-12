@@ -28,3 +28,5 @@ species_comp[is.na(species_comp)] <- 0
 
 #create csv file that can be used to do NMDS calculations
 write.csv(species_comp, "comp_sub_nocpy.csv", row.names = FALSE)
+
+#Finished on 12 May 17
