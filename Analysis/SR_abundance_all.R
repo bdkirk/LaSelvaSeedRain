@@ -1,0 +1,191 @@
+# Started on 12 May 2017
+# First analysis, will follow Haldre's outline
+# This is an analysis of effects of planted tree species on the abundance of seed rain.  The experimental unit is the plot.  We are looking at 15 plots with 4 treatment groups of planted trees.
+#This will look at the abundance over the course of a year
+
+################### Abundance analysis ##########
+
+#Load libraries
+library(ggplot2); library(car); library(lsmeans)
+
+#Bring in data
+setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
+abundanalysis <- read.csv("abund_sub_nocpy.csv")
+
+#First need to log transform the data because the numbers are very large.
+abundanalysis$log <- log(abundanalysis$total_seednum)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########### Data Exploration #########
+##a.  Outliers in Y / Outliers in X 
+#i.	plot response and predictors to check for outliers  (only with continuous data)
+#1.	Use Mydotplot or dotplot or boxplot, identify outliers
+hist(abundanalysis$log)
+boxplot(abundanalysis$log~ abundanalysis$plot, xlab="plot", ylab="seednum")
+
+#one outlier in Y, hial 2, X is categorical
+
+#b.	Examine Zero inflation Y
+#Not applicable for abundance question, because response is continuous
+
+#c.	Collinearity X: correlation between covariates
+#i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
+with(abundanalysis, table(plot, log)) #have all combinations here. 
+#Missing one plot, vogu1.
+##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
+
+#d.	Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
+# i.	Plot response against each predictor and random effect. 
+ggplot(abundanalysis, aes(plot, log))+
+  geom_boxplot()#need to add in random effects
+#maybe less variance on Saipan than on Guam, but nothing stands out as terrible. 
+
+#e.	Independence Y - are Y's independent? 
+#1.	Is there a pattern across time or space that is not incorporated in the model? 
+ggplot(abundanalysis, aes(plot, total_seednum, color=total_seednum))+
+  geom_boxplot()
+with(transplant, ftable(Island, Native, Site))
+
+#well, we only sampled at 2 sites on Guam, and three sites on Saipan, and we don't have all levels of Native for all sites. But nothing really stands out in terms of site-level effects. 
+
+#ii. Are there other potential factors that reduce independence of Y’s? 
+#timing is similar, can't think of anything else that might matter. 
+
+#f.	Sufficient data?  
+##As a rule of thumb, (all models), should have 15 to 20 observations for each parameter. So, if have 50 observations, should really only have 3 parameters. 
+
+#i.	Do all levels of Island have adequate samples of at each level of Native? 	Examine interactions
+#Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
+with(transplant, table(Island, Native))
+
+#summary
+# no obvious outliers
+# can go ahead looking at web size relative to island and native. 
+# there is a lot of variability - is there something I might have measured related to web size that is not the thing I'm testing? 
+
+#################################################
+# Fix up dataframe
+# a.	Remove missing values (NA’s)
+# 
+# Not applicable
+
+# b. Standardize continuous predictors (if necessary)
+### Why?? You would center (standardize) continuous covariates to remove correlation between slope and intercept. Centering is just putting each value around the mean, whereas standardizing is dividing by SD too. Standardizing puts all variables on the same scale (e.g. temperature, pH etc.), which can be useful for comparing effect sizes of variables, and it can help with model convergence. May be necessary with small datasets with lots of covariates, especially. 
+
+# #in this situation, not necessary, bc no continuous predictors
+
+##################################################
+###########  Analysis   ###############
+
+#1) Does web size differ between islands, and does transplanting affect web size? 
+
+#using all data
+#websize~Island*Native, family=gaussian  #by default, an identity link
+
+webmod1<-lm(websize~Island*Native, data=transplant)
+summary(webmod1)
+anova(webmod1) #should not use if unbalanced
+
+lm(websize~Island*Native, data=transplant)
+
+#check out the design matrix
+head(model.matrix(webmod1))
+
+# Opinions on model selection- much disagreement about which is best. 
+
+# 1. Classical Hypothesis testing: drop all nonsignificant predictors, then report final model and interpret differences between levels of a predictor in final model. 
+
+# anova(model) gives Type I sums of squares, which means the reference level is tested first and then other levels, and then interactions. R defaults to treatment contrasts. Can get different results for unbalanced datasets depending on which factor is entered first in the model and thus considered first. 
+
+with(transplant,tapply(websize, list(Island, Native), mean))
+
+##can use car package to do Type II or III sums of squares
+#Type III can be used with interactions
+Anova(webmod1, type="III") 
+
+#explore contrasts
+options('contrasts') #shows what contrasts R is using
+#can set contrasts to SAS default. 
+webmod1a<-lm(websize~Island*Native, data=transplant, contrasts = list(Island = "contr.SAS", Native="contr.SAS"))
+summary(webmod1a)
+
+#Type II
+Anova(lm(websize~Island+Native, data=transplant), type="II")  #note - type II can't handle interactions
+#compare against 
+anova(lm(websize~Native+Island, data=transplant))
+anova(lm(websize~Island+Native, data=transplant))
+
+#lsmeans
+islnat<-pairs(lsmeans(webmod1, ~Island | Native)) # in lsmeans package
+natisl <- pairs(lsmeans(webmod1, ~Native | Island))
+rbind(islnat, natisl)
+
+# 2. Classic model selection: Create all sub-models. Use LRT to come up with best model. 
+webmod2<-lm(websize~Island+Native, data=transplant)
+webmod3<-lm(websize~Island, data=transplant)
+webmod4<-lm(websize~Native, data=transplant)
+webmod_null<-lm(websize~1, data=transplant)
+
+anova(webmod1, webmod2)  #model 1 not sig better than 2
+anova(webmod2, webmod3)  #model 2 not sig better than 3
+anova(webmod3, webmod4) #can't run this, because not sub-model - needs to be nested to compare with LRT
+anova(webmod3, webmod_null) #model 3 sig better fit than null model
+
+# 3. Information theoretic approach- compare models using AIC- get competing models. AIC is a measure of the goodness of fit of an estimated statistical model. It is -2*log-likelihood + 2*npar, where npar is the number of effective parameters in the model. More complex models get penalized. 
+
+AIC(webmod1, webmod2, webmod3, webmod4, webmod_null) #webmod3 has lowest AIC, by almost 2 points. Might consider model averaging. 
+
+#check out packages MuMIn and AICcmodavg for a variety of useful tools. 
+
+# 4. If you do an experiment, don’t do any model selection at all- fit model that you think makes sense, and keep everything as it is, even non-significant parameters. Some might choose to do some model selection to keep only significant interactions, but once fit model with main effect terms, then stick with it. 
+
+confint(webmod3) #Saipan webs are significantly smaller than Guam (confidence intervals do not overlap 0)
+
+#Model validation
+#A. Look at homogeneity: plot fitted values vs residuals
+#B. Look at influential values: Cook
+#C. Look at independence: 
+#      plot residuals vs each covariate in the model
+#      plot residuals vs each covariate not in the model
+#      Common sense 
+#D. Look at normality of residuals: histogram
+
+#for lm can use plot(model)
+plot(webmod1)
+
+#extract residuals
+E1 <- resid(webmod1, type = "pearson")
+
+#plot fitted vs residuals
+F1 <- fitted(webmod1, type = "response")
+
+par(mfrow = c(2,2), mar = c(5,5,2,2))
+plot(x = F1, 
+     y = E1, 
+     xlab = "Fitted values",
+     ylab = "Pearson residuals", 
+     cex.lab = 1.5)
+abline(h = 0, lty = 2)
+
+plot(x=transplant$Island, y=F1) #heterogeneity in residuals bt islands
+plot(x=transplant$Native, y=F1) #heterogeneity in residuals wrt Native
+plot(x=transplant$Site, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
+
+
