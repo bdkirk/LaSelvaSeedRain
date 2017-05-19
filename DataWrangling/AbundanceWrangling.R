@@ -21,5 +21,6 @@ abund <- ddply(abundance, .(plot), summarise, total_seednum=sum(total_seednum))
 
 write.csv (abund, "abund_sub_nocpy.csv", row.names = FALSE)
 
-
-# finished on 11 May 2017
+#added in columns in excel for predictor variables of canopysp (treatment) and block
+# file name "abund_sub_nocpy_addedcol.csv"
+# finished on 15 May 2017
