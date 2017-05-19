@@ -34,21 +34,16 @@ pheno_data[is.na(pheno_data)] <- 0
 #create a tidy csv file for rank abundance of individual species
 write.csv(pheno_data, "pheno_ovsty_tidy.csv", row.names = FALSE)
 
-## Testing to see if data is in the correct format for analysis...thus far it is not.
+head(pheno_data)
 #do a rank abundance plot to see which seeds have the most
+x <- pheno_data[,2:135]
+y <- pheno_data[,1]
 
-rankdata <- rankabundance(pheno_data, y="pheno",factor="species", "plot" ,t=qt(0.975,df=n-1))
-str(pheno_data)
-rankdata <- rankabundance(species_data)
+rankdata <- rankabundance(x, y="y",factor="species", "plot" ,t=qt(0.975,df=14))
+write.csv(rankdata, "pheno_rankdata.csv")
+rankplot <- rankabunplot(rankdata, addit=FALSE, labels="species",scale="abundance")
 
-rankabunplot(rankdata,addit=F,labels="species",scale="abundance",scaledx=F,type="o",
-             xlim=c(min(xpos),max(xpos)),ylim=c(0,max(species_data[,scale])),specnames=c(3:74))
-
-rankabuncomp(x,y="",factor,scale="abundance",scaledx=F,type="o",rainbow=T,
-             legend=T,xlim=c(1,max1), ylim=c(0,max2), ...)
-
-
-#Create monthly summaries for the plots
+########Create monthly summaries for the plots######
 pheno$date <- as.Date(pheno$date, format = ("%Y-%m-%d"))
 pheno$month <- as.Date(cut(pheno$date, breaks = "month"))
 
