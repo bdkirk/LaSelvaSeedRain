@@ -272,4 +272,5 @@ write.csv(removed_sub, "yearsub_no_cpysp.csv", row.names = FALSE)
 #all files were written 5 April 2017
 #Then they were rewritten 6 April 2017
 # (hopefully) Finals were rewritten 11 May 2017
+# Files were rewritten again after confirmation from Ricardo that two species with no seeds recorded had seeds that were not read to germinate.
 
