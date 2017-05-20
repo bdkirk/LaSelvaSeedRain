@@ -229,6 +229,9 @@ seedrain_all$plot[seedrain_all$trap %in% vogu4] <- "vogu4"
 #remove unnecessary columns
 seedrain_all$min <- NULL
 
+#remove rows that have unknown species, called desconocido
+#did this manually in excel
+
 #make columns appropriate variable
 seedrain_all$block <-as.factor(seedrain_all$block)
 seedrain_all$meshtype <- as.factor(seedrain_all$meshtype)
@@ -236,7 +239,6 @@ seedrain_all$trap <- as.factor(seedrain_all$trap)
 seedrain_all$plot <- as.factor(seedrain_all$plot)
 seedrain_all$canopysp <- as.factor(seedrain_all$canopysp)
 str(seedrain_all)
-
 
 ###csv file for all of the data
 setwd("../")
