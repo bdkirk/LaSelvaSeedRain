@@ -5,7 +5,7 @@
 #Experimental design: RCBD, C. Total df = 14
 
 #load libraries
-library(readxl); library(plyr); library(ggplot2); library(reshape2); library(base)
+library(readxl); library(plyr); library(ggplot2); library(reshape2); library(base); library(vegan)
 
 #bring in original data file with overstory species removed that has been cut to the specific dates
 setwd("Data/TidyData")
@@ -25,6 +25,24 @@ species_data <- species_data[,c(names(species_data)[1],sort(names(species_data)[
 species_data <- species_data[, -which(names(species_data)=="NA")]
 #Replace NA's with zeros
 species_data[is.na(species_data)] <- 0
+
+#####add in columns for richness, evenness and shannon-wiener diversity
+x <- species_data[,1]
+y <- species_data[,2:125]
+
+
+#calculating diversity indices
+y$richness <- specnumber(y)
+
+y$diversity <- diversity(y, index = "shannon")
+
+y$evenness <- (y$diversity/(log(y$richness)))
+
+#change diversity to something more recognizable
+y$diversity <- exp(diversity(y, index = "shannon"))
+
+#bind x and y back together
+species_data <- cbind(x, y)
 
 #create csv file that can be used to do NMDS calculations
 write.csv(species_data, "div_sub_nocpy.csv", row.names = FALSE)
