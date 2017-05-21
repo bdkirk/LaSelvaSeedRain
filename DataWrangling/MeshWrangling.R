@@ -51,10 +51,44 @@ meshdiv_data <- meshdiv_data[, -which(names(meshdiv_data)=="NA")]
 #Replace NA's with zeros
 meshdiv_data[is.na(meshdiv_data)] <- 0
 
+str(meshdiv_data)
+#make trap a factor not an integer
+meshdiv_data$trap <- as.factor(meshdiv_data$trap)
+
+#####add in columns for richness, evenness and shannon-wiener diversity
+x <- meshdiv_data[,1]
+y <- meshdiv_data[,2:124]
+
+
+#calculating diversity indices
+y$richness <- specnumber(y)
+
+y$diversity <- diversity(y, index = "shannon")
+
+y$evenness <- (y$diversity/(log(y$richness)))
+
+#change diversity to something more recognizable
+y$diversity <- exp(diversity(y, index = "shannon"))
+
+#bind x and y back together
+meshdiv_data2 <- cbind(x, y[,124:126])
+tail(div_data2)
+
+#assigning canopy species, block and meshtype to a particular trap number
+##want to add in overstory treatment to new dataset by matching it to trap
+# already have trap_trt object created before with 
+
+#check and make sure merged data has same number of rows as seedrain_all originally had
+#need to change column name from x to trap
+colnames(meshdiv_data2) <- c("trap", "richness", "diversity", "evenness")
+#Merges data together
+meshdiv_data3 <- merge(meshdiv_data2, trap_trt, by="trap", all.x=TRUE)
+
+
 #create csv file that can be used to do NMDS calculations
-write.csv(meshdiv_data, "mesh_div_analysis.csv", row.names = FALSE)
+write.csv(meshdiv_data3, "mesh_div_analysis.csv", row.names = FALSE)
 
-
+#Finished file on 21 May 17
 
 ######### Composition ########
 #bring in data
@@ -74,3 +108,23 @@ meshcomp_data[is.na(meshcomp_data)] <- 0
 
 #create csv file that can be used to do NMDS calculations
 write.csv(meshcomp_data, "mesh_comp_analysis.csv", row.names = FALSE)
+
+####have not started as of 21 May ####
+#### Phenology ####
+#bring in data file
+mesh_pheno <- read.csv("seedrain_all_tidy.csv")
+
+#summarise the data by plot
+plotpheno <- ddply(mesh_pheno, .(trap, species), summarise, seednum=sum(total_seednum))
+
+#dcast makes this long data go wide.  You specify the dcast(datafile, columns + you  + want + to + stay + long ~column you want to go wide, value.var="column you want to be the variable")
+meshpheno_data <- dcast(plotpheno, trap ~ species, value.var="seednum")
+#This sorts the data after it is created
+meshpheno_data <- meshpheno_data[,c(names(meshpheno_data)[1],sort(names(meshpheno_data)[2:ncol(meshpheno_data)]))]
+#identifies all seed rain species that are NA
+meshpheno_data <- meshpheno_data[, -which(names(meshpheno_data)=="NA")]
+#Replace NA's with zeros
+meshpheno_data[is.na(meshpheno_data)] <- 0
+
+#create a tidy csv file for rank abundance of individual species
+write.csv(meshpheno_data, "mesh_pheno_analysis.csv", row.names = FALSE)
