@@ -18,17 +18,17 @@ plotsum <- ddply(seeddiv, .(plot, species), summarise, seednum=sum(total_seednum
 ####CREATING WIDE DATA##########################################################
 #Create species columns to have data in wide format
 #dcast makes this long data go wide.  You specify the dcast(datafile, columns + you  + want + to + stay + long ~column you want to go wide, value.var="column you want to be the variable")
-species_data <- dcast(plotsum, plot ~ species, value.var="seednum")
+div_data <- dcast(plotsum, plot ~ species, value.var="seednum")
 #This sorts the data after it is created
-species_data <- species_data[,c(names(species_data)[1],sort(names(species_data)[2:ncol(species_data)]))]
+div_data <- div_data[,c(names(div_data)[1],sort(names(div_data)[2:ncol(div_data)]))]
 #identifies all seed rain species that are NA
-species_data <- species_data[, -which(names(species_data)=="NA")]
+div_data <- div_data[, -which(names(div_data)=="NA")]
 #Replace NA's with zeros
-species_data[is.na(species_data)] <- 0
+div_data[is.na(div_data)] <- 0
 
 #####add in columns for richness, evenness and shannon-wiener diversity
-x <- species_data[,1]
-y <- species_data[,2:125]
+x <- div_data[,1]
+y <- div_data[,2:124]
 
 
 #calculating diversity indices
@@ -42,12 +42,14 @@ y$evenness <- (y$diversity/(log(y$richness)))
 y$diversity <- exp(diversity(y, index = "shannon"))
 
 #bind x and y back together
-species_data <- cbind(x, y)
-
+div_data2 <- cbind(x, y[,124:126])
+tail(div_data2)
 #create csv file that can be used to do NMDS calculations
-write.csv(species_data, "div_sub_nocpy.csv", row.names = FALSE)
+write.csv(div_data2, "div_sub_nocpy.csv", row.names = FALSE)
 
-#finished on 11 May 2017
+# NEED to manually add in block and canopysp
+
+#finished on 21 May 2017
 
 ##This data file has no overstory species and is subsetted for a year long period from 2-24-14 to 2-23-15
 
