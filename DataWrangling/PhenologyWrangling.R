@@ -36,7 +36,7 @@ write.csv(pheno_data, "pheno_ovsty_tidy.csv", row.names = FALSE)
 
 head(pheno_data)
 #do a rank abundance plot to see which seeds have the most
-x <- pheno_data[,2:135]
+x <- pheno_data[,2:134]
 y <- pheno_data[,1]
 
 rankdata <- rankabundance(x, y="y",factor="species", "plot" ,t=qt(0.975,df=14))
