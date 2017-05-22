@@ -6,7 +6,7 @@
 
 ############ Abundance ############
 #add library
-library(dplyr); library(plyr)
+library(dplyr); library(plyr); library(vegan)
 
 #Set wd
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
@@ -72,7 +72,7 @@ y$diversity <- exp(diversity(y, index = "shannon"))
 
 #bind x and y back together
 meshdiv_data2 <- cbind(x, y[,124:126])
-tail(div_data2)
+tail(meshdiv_data2)
 
 #assigning canopy species, block and meshtype to a particular trap number
 ##want to add in overstory treatment to new dataset by matching it to trap
@@ -106,8 +106,11 @@ meshcomp_data <- meshcomp_data[, -which(names(meshcomp_data)=="NA")]
 #Replace NA's with zeros
 meshcomp_data[is.na(meshcomp_data)] <- 0
 
+#merge in the trap data as well
+meshcomp_data2 <- merge(meshcomp_data, trap_trt, by="trap", all.x=TRUE)
+
 #create csv file that can be used to do NMDS calculations
-write.csv(meshcomp_data, "mesh_comp_analysis.csv", row.names = FALSE)
+write.csv(meshcomp_data2, "mesh_comp_analysis.csv", row.names = FALSE)
 
 ####have not started as of 21 May ####
 #### Phenology ####
