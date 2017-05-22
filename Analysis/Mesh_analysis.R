@@ -13,16 +13,20 @@ setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 meshabund <- read.csv("Mesh_abund_analysis")
 
 #plot residuals
-mabundanalysis <- lmer(seednum~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = meshabund)
+mabundanalysis <- glmer(seednum~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block)+ (1|trap), family= "poisson", data = meshabund)
 abund.res = resid(mabundanalysis) 
 
 plot(meshabund$seednum, abund.res, ylab="Residuals", xlab="Seed Abundance", main="Mesh Abundance Residuals") 
 abline(0, 0) 
 
+mesh_abun.res <- resid(mabundanalysis)
+mesh_abund.pred <- predict(mabundanalysis)
 
+plot(mesh_abund.pred, mesh_abun.res)
+abline(0,0)
 
-
-
+anova(mabundanalysis)
+summary(mabundanalysis)
 
 #######Diversity Analysis######
 #load library
@@ -43,10 +47,14 @@ ggplot(mesh_diversity, aes(block, richness, color=canopysp))+
 ##Residuals##
 
 mrichanalysis <- lmer(richness~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity)
-rich.res = resid(mrichanalysis) 
 
-plot(mesh_diversity$richness, rich.res, ylab="Residuals", xlab="Seed Species Richness", main="Mesh Richness Residuals") 
+mesh_rich.res <-  resid(mrichanalysis) 
+mesh_rich.pred <- predict(mrichanalysis)
+plot(mesh_rich.pred, mesh_rich.res, ylab="Residuals", xlab="Seed Species Richness", main="Mesh Richness Residuals") 
 abline(0, 0) 
+
+summary(mrichanalysis)
+anova(mrichanalysis)
 
 #OR
 plot(mrichanalysis)
@@ -125,7 +133,7 @@ setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
 nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
   # Create plot
-  plot(mod, display = 'treatments', choice = c(1, 2), type = 'none')
+  plot(mod, display = 'sites', choice = c(1, 2), type = 'none')
   
   # Add points for each group with a different color per group
   points(mod$points[groupcol == g1, 1], mod$points[groupcol == g1, 2], pch = 22, bg = "#006600")
@@ -134,7 +142,7 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
   points(mod$points[groupcol == g4, 1], mod$points[groupcol == g4, 2], pch = 22, bg = "#0066CC")
   
   # Ordinate SD ellipses around the centroid
-  ordiellipse(mod, groupcol, col = c("#006600", "#FF6600", "#990066", "#0066CC"), display = "treatents", kind = "sd", label = F)
+  ordiellipse(mod, groupcol, col = c("#006600", "#FF6600", "#990066", "#0066CC"), display = "sites", kind = "sd", label = F)
   
   # Add legend
   legend(legpos, legend = legcont, fill = c("#006600", "#FF6600", "#990066", "#0066CC"), cex = 0.75)
@@ -144,25 +152,27 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
 
 # Using Bray-Curtis dissimilarity index
 #Get data
-speciesdata <- read.csv("species_data.csv")
-ncol(speciesdata)
-str(speciesdata[,1:10])
-speciesdata$block <-as.factor(speciesdata$block)
-speciesdata$trap <- as.factor(speciesdata$trap)
-str(speciesdata)
+mesh_compdata <- read.csv("mesh_comp_analysis.csv")
+ncol(mesh_compdata)
+str(mesh_compdata[,1:10])
+mesh_compdata$block <-as.factor(mesh_compdata$block)
+###need to add in block in the wrangling data
+mesh_compdata$trap <- as.factor(mesh_compdata$trap)
+str(mesh_compdata)
 
-seedspecies <- speciesdata[,7:143]
+mesh_seedcomp <- mesh_compdata[,7:143]
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
-seedrain.bc <- vegdist(seedspecies)
+mesh_seedcomp.bc <- vegdist(mesh_seedcomp)
 # PERMANOVA (Anderson et al. 2001)
-procD.lm(seedrain.bc ~ canopysp*block, data = speciesdata) # significant diff btw overstory plots
+procD.lm(mesh_seedcomp.bc ~ canopysp*block, data = mesh_compdata) 
+
 #This does a pair-wise comparison of the data
-advanced.procD.lm(seedrain.bc ~ canopysp, ~ 1, ~ canopysp, data = speciesdata) # Four overstory treatments compared with one another
+advanced.procD.lm(mesh_seedcomp.bc ~ canopysp, ~ 1, ~ canopysp, data = mesh_compdata) # Four overstory treatments compared with one another
 #NMDS
-seedspecies.mds <- metaMDS(seedspecies, autotransform = F, expand = F, k = 2, try = 20)
-seedspecies.mds$stress
+mesh_seedcomp.mds <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 2, try = 20)
+mesh_seedcomp.mds$stress
 #Ordination
-nmsplot(seedspecies.mds, speciesdata$canopysp, "Hial", "Vogu", "Pema", "Viko",
+nmsplot(mesh_seedcomp.mds, mesh_compdata$canopysp, "Hial", "Vogu", "Pema", "Viko",
         "bottomleft", c("HIAL", "VOGU", "PEMA", "VIKO"))
 #I am not sure what this does.
-stressplot(seedspecies.mds)
+stressplot(mesh_seedcomp.mds)
