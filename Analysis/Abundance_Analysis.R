@@ -218,24 +218,39 @@ plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Sa
 plot(abundmod1)
 #this model has the logsum
 
-plot(abundmod2) #this model has the total number of seeds
-
+plot(abundmod2) 
+#This part involves determining which model is most appropriate
 #get residuals and plot residuals vs predicted values
-abund.glm = glm(total_seednum ~ block+canopysp, data=abundanalysis) 
+abund.glm = glm(total_seednum ~ block+canopysp, data=abundanalysis, 
+                family = poisson) 
 abund.res = resid(abund.glm) 
 
 plot(abundanalysis$total_seednum, abund.res, ylab="Residuals", xlab="Seed Abundance", main="Abundance pred by resid") 
 abline(0, 0) 
 
-#chedk for normality
-hist(abund.res)
+anova(abund.glm)
+head(abundanalysis)
+length(unique(abundanalysis$plot))
+library(lme4)
+#change model to glmer because this will account for overdispersion.
+abund.glm = glmer(total_seednum ~ block+canopysp+(1|plot), data=abundanalysis, 
+                  family = poisson)
+abund.res = resid(abund.glm)
+abund.pred = predict(abund.glm)
 
-#trying with logsum rather than acutal count numbers
-abund2.glm = glm(logsum ~ block+canopysp, data=abundanalysis) 
-abund2.res = resid(abund2.glm) 
-
-plot(abundanalysis$logsum, abund2.res, ylab="Residuals", xlab="Seed Abundance", main="Abundance pred by resid") 
+plot(abund.pred, abund.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
 abline(0, 0) 
 
-#check for normality
-hist(abund2.res)
+anova(abund.glm, test= "F")
+summary(abund.glm)
+
+#find Tukeys (HSD) and use for this data
+#if p-value is greater than 0.05, don't need to do HSD
+
+
+lsmeans(abund.glm, "canopysp", contr= "pairwise")
+
+
+
+
+

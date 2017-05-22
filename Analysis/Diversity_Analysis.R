@@ -215,29 +215,19 @@ plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
 plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
 
 ########### RESIDUALS #################
-richnessmod1<-glm(richness~block+canopysp, data=divanalysis)
+richnessmod1<-glmer(richness~block+canopysp+(1|plot), family = poisson, data=divanalysis)
 summary(richnessmod1)
-anova(richnessmod1) #should not use if unbalanced
+anova(richnessmod1, test= "F") 
 
-richnessmod2 <- glm(richness~plot, data= divanalysis)
-richnessmod3 <- glm(richness~canopysp*block, data = divanalysis)
-richnessmod4 <- glm(richness~canopysp, data = divanalysis)
-richnessmod5 <- glm(richness~block, data = divanalysis)
-richnessmodnull <- glm(richness~1, data = divanalysis)
-anova(richnessmod4)
 
 plot(richnessmod1)
-#this model has the logsum
+rich.res = resid(richnessmod1)
+rich.pred = predict(richnessmod1)
 
-plot(richnessmod2) #this model has the total number of seeds
-
-#get residuals and plot residuals vs predicted values
-rich.glm = glm(richness ~ block+canopysp, data=divanalysis) 
-rich.res = resid(rich.glm) 
-
-plot(divanalysis$richness, rich.res, ylab="Residuals", xlab="Seed Species Richness", main="Richness pred by resid") 
+plot(rich.pred, rich.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
 abline(0, 0) 
 
+ 
 #chedk for normality
 hist(rich.res)
 
@@ -445,25 +435,20 @@ plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
 plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
 
 ########### RESIDUALS #################
-diversitymod1<-glm(diversity~block+canopysp, data=divanalysis)
+diversitymod1<-lm(diversity~block+canopysp, data=divanalysis)
 summary(diversitymod1)
 anova(diversitymod1) #should not use if unbalanced
 
-diversitymod2 <- glm(diversity~plot, data= divanalysis)
-diversitymod3 <- glm(diversity~canopysp*block, data = divanalysis)
-diversitymod4 <- glm(diversity~canopysp, data = divanalysis)
-diversitymod5 <- glm(diversity~block, data = divanalysis)
-diversitymodnull <- glm(diversity~1, data = divanalysis)
-anova(diversitymod4)
 
 plot(diversitymod1)
-#this model has the logsum
+div.res <- resid(diversitymod1)
+div.pred <- predict(diversitymod1)
 
-plot(diversitymod2) #this model includes the interaction
+plot(div.pred, div.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
 
 #get residuals and plot residuals vs predicted values
-div.glm = glm(diversity ~ block+canopysp, data=divanalysis) 
-div.res = resid(div.glm) 
+div.glm <- lm(diversity ~ block+canopysp, data=divanalysis) 
+div.res <- resid(div.glm) 
 
 plot(divanalysis$diversity, div.res, ylab="Residuals", xlab="Seed Species diversity", main="diversity pred by resid") 
 abline(0, 0) 
@@ -679,21 +664,17 @@ plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
 plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
 
 ########### RESIDUALS #################
-evennessmod1<-glm(evenness~block+canopysp, data=divanalysis)
+evennessmod1<-lm(evenness~block+canopysp, data=divanalysis)
 summary(evennessmod1)
 anova(evennessmod1) #should not use if unbalanced
 
-evennessmod2 <- glm(evenness~plot, data= divanalysis)
-evennessmod3 <- glm(evenness~canopysp*block, data = divanalysis)
-evennessmod4 <- glm(evenness~canopysp, data = divanalysis)
-evennessmod5 <- glm(evenness~block, data = divanalysis)
-evennessmodnull <- glm(evenness~1, data = divanalysis)
-anova(evennessmod4)
 
 plot(evennessmod1)
 #this model has the logsum
 
-plot(evennessmod2) #this model includes the interaction
+even.res <- resid(evennessmod1)
+even.pred <- predict(evennessmod1)
+plot(even.pred, even.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
 
 #get residuals and plot residuals vs predicted values
 even.glm = glm(evenness ~ block+canopysp, data=divanalysis) 
