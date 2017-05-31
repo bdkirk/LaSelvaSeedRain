@@ -437,7 +437,7 @@ plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Sa
 ########### RESIDUALS #################
 diversitymod1<-lm(diversity~block+canopysp, data=divanalysis)
 summary(diversitymod1)
-anova(diversitymod1) #should not use if unbalanced
+anova(diversitymod1, test = "F") #should not use if unbalanced
 
 
 plot(diversitymod1)
@@ -445,10 +445,21 @@ div.res <- resid(diversitymod1)
 div.pred <- predict(diversitymod1)
 
 plot(div.pred, div.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
-
+abline(0,0)
 #get residuals and plot residuals vs predicted values
-div.glm <- lm(diversity ~ block+canopysp, data=divanalysis) 
-div.res <- resid(div.glm) 
+div.glm <- glm(diversity ~ block+canopysp, data=divanalysis) 
+div.res1 <- resid(div.glm) 
+div.pred1 <- predict(div.glm)
+plot (div.pred1, div.res1)
+
+anova(div.glm, test = "F")
+summary(div.glm)
+
+##Not necessary to use, read below
+div.res2 <- residuals.glm(div.glm)
+div.pred2 <- predict.glm(div.glm)
+plot(div.pred2, div.res2)
+##did not find any difference using the glm specific functions
 
 plot(divanalysis$diversity, div.res, ylab="Residuals", xlab="Seed Species diversity", main="diversity pred by resid") 
 abline(0, 0) 
@@ -456,7 +467,7 @@ abline(0, 0)
 #chedk for normality
 hist(div.res)
 
-
+###Found no difference on 31 May between using glm or lm for shannon wiener diversity. lm is simpler so I will use this.
 
 ################################################################################
 ######################## EVENNESS ##############################################
@@ -666,7 +677,7 @@ plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Sa
 ########### RESIDUALS #################
 evennessmod1<-lm(evenness~block+canopysp, data=divanalysis)
 summary(evennessmod1)
-anova(evennessmod1) #should not use if unbalanced
+anova(evennessmod1, test="F") #should not use if unbalanced
 
 
 plot(evennessmod1)
