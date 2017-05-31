@@ -221,8 +221,7 @@ plot(abundmod1)
 plot(abundmod2) 
 #This part involves determining which model is most appropriate
 #get residuals and plot residuals vs predicted values
-abund.glm = glm(total_seednum ~ block+canopysp, data=abundanalysis, 
-                family = poisson) 
+abund.glm <-  glm(total_seednum ~ block+canopysp, data=abundanalysis,  family = poisson) 
 abund.res = resid(abund.glm) 
 
 plot(abundanalysis$total_seednum, abund.res, ylab="Residuals", xlab="Seed Abundance", main="Abundance pred by resid") 
@@ -231,12 +230,14 @@ abline(0, 0)
 anova(abund.glm)
 head(abundanalysis)
 length(unique(abundanalysis$plot))
+
 library(lme4)
+
 #change model to glmer because this will account for overdispersion.
-abund.glm = glmer(total_seednum ~ block+canopysp+(1|plot), data=abundanalysis, 
+abund.glm <- glmer(total_seednum ~ block+canopysp+(1|plot), data=abundanalysis, 
                   family = poisson)
-abund.res = resid(abund.glm)
-abund.pred = predict(abund.glm)
+abund.res <- resid(abund.glm)
+abund.pred <- predict(abund.glm)
 
 plot(abund.pred, abund.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
 abline(0, 0) 
