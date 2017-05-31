@@ -46,6 +46,7 @@ ncol(compdata)
 str(compdata[,1:10])
 compdata$block <- as.factor(compdata$block)
 
+#get only the species data from the compdata file
 seed_comp <- compdata[,4:127]
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
 seedcomp.bc <- vegdist(seed_comp)
@@ -56,7 +57,7 @@ procD.lm(seedcomp.bc ~ canopysp*block, data = compdata) # significant interactio
 advanced.procD.lm(seedcomp.bc ~ canopysp, ~ 1, ~ canopysp, data = compdata) # Four overstory treatments compared with one another
 
 #NMDS
-seedcomp.mds <- metaMDS(seed_comp, autotransform = F, expand = F, k = 2, try = 20)
+seedcomp.mds <- metaMDS(seed_comp, autotransform = F, expand = F, k = 2, try = 50)
 seedcomp.mds$stress
 #Ordination
 nmsplot(seedcomp.mds, compdata$canopysp, "Hial", "Vogu", "Pema", "Viko",
