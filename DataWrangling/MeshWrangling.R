@@ -26,7 +26,7 @@ trap_trt <- trap_trt[,-6]
 #Merges data together
 mesh_abund2 <- merge(sum_trap, trap_trt, by="trap", all.x=TRUE)
 
-write.csv(mesh_abund2, "Mesh_abund_analysis")
+write.csv(mesh_abund2, "Mesh_abund_analysis.csv")
 
 
 #######Diversity#######
@@ -112,7 +112,6 @@ meshcomp_data2 <- merge(meshcomp_data, trap_trt, by="trap", all.x=TRUE)
 #create csv file that can be used to do NMDS calculations
 write.csv(meshcomp_data2, "mesh_comp_analysis.csv", row.names = FALSE)
 
-####have not started as of 21 May ####
 #### Phenology ####
 #bring in data file
 mesh_pheno <- read.csv("seedrain_all_tidy.csv")
