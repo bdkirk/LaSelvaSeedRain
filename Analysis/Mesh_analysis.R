@@ -5,12 +5,12 @@
 #####Abundance Analysis#####
 
 #Libraries
-library(dplyr); library(plyr); library(stats); library(lme4)
+library(dplyr); library(plyr); library(stats); library(lme4); library(readr)
 
 #Bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
-meshabund <- read.csv("Mesh_abund_analysis")
+meshabund <- read.csv("Mesh_abund_analysis.csv")
 
 #plot residuals
 mabundanalysis <- glmer(seednum~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block)+ (1|trap), family= "poisson", data = meshabund)
@@ -40,13 +40,13 @@ mesh_diversity <- read.csv("mesh_div_analysis.csv")
 hist(mesh_diversity$richness)
 boxplot(mesh_diversity$richness~ mesh_diversity$canopysp, main= "Seed species richness per treatment", xlab="canopysp", ylab="species richness")
 
-ggplot(mesh_diversity, aes(block, richness, color=canopysp))+
+ggplot(mesh_diversity, aes(block, richness, color=meshtype))+
   geom_boxplot()+
   facet_grid(.~canopysp)
 
 ##Residuals##
 
-mrichanalysis <- lmer(richness~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity)
+mrichanalysis <- glmer(richness~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity, family=poisson)
 
 mesh_rich.res <-  resid(mrichanalysis) 
 mesh_rich.pred <- predict(mrichanalysis)
@@ -68,23 +68,29 @@ plot(mrichanalysis)
 hist(mesh_diversity$diversity)
 boxplot(mesh_diversity$diversity~ mesh_diversity$canopysp, main= "Seed species diversity per treatment", xlab="canopysp", ylab="species diversity")
 
-ggplot(mesh_diversity, aes(block, diversity, color=canopysp))+
+ggplot(mesh_diversity, aes(block, diversity, color=meshtype))+
   geom_boxplot()+
   facet_grid(.~canopysp)
 
 ##Residuals##
 
-mesh_divanalysis <- lmer(diversity+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity)
+mesh_divanalysis <- lmer(diversity~canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity)
 meshdiv.res = resid(mesh_divanalysis) 
+meshdiv.pred <- predict(mesh_divanalysis)
 
+plot(meshdiv.pred, meshdiv.res)
 plot(mesh_diversity$diversity, meshdiv.res, ylab="Residuals", xlab="Seed Species Diversity", main="Mesh Diversity Residuals") 
 abline(0, 0) 
 
 #OR
 plot(mesh_divanalysis)
 
+anova(mesh_divanalysis, test= "F")
+summary(mesh_divanalysis)
 
 
+#try using lm and glmer instead of lmer; R is unhappy when anything besides lmer is used.
+#mesh_divanalysis2 <- glmer(diversity~canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity)
 
 #3) Evenness
 
@@ -93,14 +99,16 @@ plot(mesh_divanalysis)
 hist(mesh_diversity$evenness)
 boxplot(mesh_diversity$evenness~ mesh_diversity$canopysp, main= "Seed species evenness per treatment", xlab="canopysp", ylab="species evenness")
 
-ggplot(mesh_diversity, aes(block, evenness, color=canopysp))+
+ggplot(mesh_diversity, aes(block, evenness, color=meshtype))+
   geom_boxplot()+
   facet_grid(.~canopysp)
 
 ##Residuals##
 
 mesh_evenanalysis <- lmer(evenness~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity)
-mesheven.res = resid(mesh_evenanalysis) 
+mesheven.res <- resid(mesh_evenanalysis) 
+mesheven.pred <- predict(mesh_evenanalysis)
+plot(mesheven.pred, mesheven.res)
 
 plot(mesh_diversity$evenness, mesheven.res, ylab="Residuals", xlab="Seed Species Evenness", main="Mesh Evenness Residuals") 
 abline(0, 0) 
@@ -108,7 +116,8 @@ abline(0, 0)
 #OR
 plot(mesh_evenanalysis)
 
-
+anova(mesh_evenanalysis)
+summary(mesh_evenanalysis)
 
 
 
@@ -154,13 +163,13 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
 #Get data
 mesh_compdata <- read.csv("mesh_comp_analysis.csv")
 ncol(mesh_compdata)
-str(mesh_compdata[,1:10])
+str(mesh_compdata[,123:128])
 mesh_compdata$block <-as.factor(mesh_compdata$block)
 ###need to add in block in the wrangling data
 mesh_compdata$trap <- as.factor(mesh_compdata$trap)
 str(mesh_compdata)
 
-mesh_seedcomp <- mesh_compdata[,7:143]
+mesh_seedcomp <- mesh_compdata[,2:124]
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
 mesh_seedcomp.bc <- vegdist(mesh_seedcomp)
 # PERMANOVA (Anderson et al. 2001)
@@ -169,7 +178,7 @@ procD.lm(mesh_seedcomp.bc ~ canopysp*block, data = mesh_compdata)
 #This does a pair-wise comparison of the data
 advanced.procD.lm(mesh_seedcomp.bc ~ canopysp, ~ 1, ~ canopysp, data = mesh_compdata) # Four overstory treatments compared with one another
 #NMDS
-mesh_seedcomp.mds <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 2, try = 20)
+mesh_seedcomp.mds <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 2, try = 100)
 mesh_seedcomp.mds$stress
 #Ordination
 nmsplot(mesh_seedcomp.mds, mesh_compdata$canopysp, "Hial", "Vogu", "Pema", "Viko",
