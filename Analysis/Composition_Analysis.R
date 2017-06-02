@@ -36,7 +36,6 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
   
 }
 
-
 # Using Bray-Curtis dissimilarity index
 #Get data
 compdata <- read.csv("comp_sub_nocpy.csv")
@@ -65,5 +64,29 @@ nmsplot(seedcomp.mds, compdata$canopysp, "Hial", "Vogu", "Pema", "Viko",
 #I am not sure what this does.
 stressplot(seedcomp.mds)
 
+#EDIT TO DEMONSTRATE A SCREEPLOT
+#Modified code from https://websites.pmc.ucsc.edu/~mclapham/Rtips/ordination.htm
+#data_matrix: rows are sites, columns are species
+#reps: number of random starts per number of factors
+#max_factors: maximum number of factors to do ordination with
 
+NMDS.scree<-function(data_matrix, reps=3, max_factors=2) { 
+  
+  n <- nrow(data_matrix)
+  stopifnot(n>max_factors)
+  
+  results <- sapply(rep(1:max_factors,each=reps), function(k){
+    metaMDS(data_matrix,autotransform=F,k=k)$stress
+  })
+  
+  plot(rep(1:max_factors,each=reps),results,
+       xlim=c(0,max_factors), ylim=c(0,results[1]),
+       xlab="# of Dimensions",ylab="Stress",main="NMDS screeplot")
+  
+}
+
+NMDS.scree(seed_comp, reps=3, max_factors=7)
+#Based on this, you might use four factors?
+seedcomp.mds2 <- metaMDS(seed_comp, autotransform = F, expand = F, k = 4, try = 100)
+stressplot(seedcomp.mds2)
 ### Ran on 21 May and did not find significant difference between the treatments ###
