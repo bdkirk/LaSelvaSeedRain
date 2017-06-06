@@ -12,7 +12,7 @@ setwd("Data/RawData")
 seedrain <-read_excel("Lluvia de semillas_RBA_20Apr15_bk_10Mar17.xlsx", sheet=4, col_names=TRUE, na= "NA")
 
 #Change col names to english and abbreviate
-colnames(seedrain) <- c("week", "date", "trap", "sample", "canopysp", "block", "quad", "type", "species", "fruitnum", "seednum", "poop", "damaged", "obs")
+colnames(seedrain) <- c("week", "date", "trap", "sample", "treatment", "block", "quad", "type", "species", "fruitnum", "seednum", "poop", "damaged", "obs")
 
 #convert all seed species names to lowercase to prevent capitalization errors
 seedrain$species <- tolower(seedrain$species)
@@ -97,8 +97,8 @@ seedrain_all <- ddply(seedrain_all, .(date, trap, species), summarise, total_see
 
 #assigning canopy species, block and quad to a particular trap number
 ##want to add in overstory treatment to new dataset by matching it to trap
-trap_trt <- seedrain[, c("trap", "canopysp", "block", "quad")]
-trap_trt <- ddply(trap_trt, .(trap, canopysp, block, quad), summarise, n=length(quad))
+trap_trt <- seedrain[, c("trap", "treatment", "block", "quad")]
+trap_trt <- ddply(trap_trt, .(trap, treatment, block, quad), summarise, n=length(quad))
 trap_trt <- trap_trt[,-5]
 
 #check and make sure merged data has same number of rows as seedrain_all originally had
@@ -109,20 +109,20 @@ seedrain_all <- merge(seedrain_all, trap_trt, by="trap", all.x=TRUE)
 
 ####### Testing Functions #####
 #function to calculate the total seed number across the four treatments and the four blocks
-seed_b_c <- ddply(seedrain_all, .(canopysp, block), summarise, total=sum(total_seednum))
+seed_b_c <- ddply(seedrain_all, .(treatment, block), summarise, total=sum(total_seednum))
 seed_b_c
 
 #funciton used to calculate the total number of seeds for each of the species in seed rain
 species_seeds <- ddply(seedrain_all, .(species), summarise, total=sum(total_seednum))
 species_seeds
 
-seed_2 <- ddply(seedrain_all, .(canopysp, species), summarise, total=sum(total_seednum))
+seed_2 <- ddply(seedrain_all, .(treatment, species), summarise, total=sum(total_seednum))
 seed_2
 #function to calculate the total seed number across the four blocks
 seed_b <- ddply(seedrain_all, .(block), summarise, total=sum(total_seednum))
 seed_b
 #function to calculate the total seed number across the four overstory treatments
-seed_c <- ddply(seedrain_all, .(canopysp), summarise, total=sum(total_seednum))
+seed_c <- ddply(seedrain_all, .(treatment), summarise, total=sum(total_seednum))
 seed_c
 
 
@@ -192,7 +192,7 @@ date_trap[date_trap$Freq==0 & date_trap$date != "2014-01-21" & date_trap$date!= 
 seedrain_all$plot <- NA
 
 plot_numbers <- seq(1:75)
-#Create list of plots with canopysp_block combo
+#Create list of plots with treatment_block combo
 hial1 <- c(1, 2, 3, 4, 5)
 viko1 <- c(6, 7, 8, 9, 10)
 pema1 <- c(11, 12, 13, 14, 15)
@@ -237,7 +237,7 @@ seedrain_all$block <-as.factor(seedrain_all$block)
 seedrain_all$meshtype <- as.factor(seedrain_all$meshtype)
 seedrain_all$trap <- as.factor(seedrain_all$trap)
 seedrain_all$plot <- as.factor(seedrain_all$plot)
-seedrain_all$canopysp <- as.factor(seedrain_all$canopysp)
+seedrain_all$treatment <- as.factor(seedrain_all$treatment)
 str(seedrain_all)
 
 ###csv file for all of the data
@@ -253,7 +253,7 @@ write.csv(seedrain_all, "seedrain_all_tidy.csv", row.names = FALSE)
 removed_species <- seedrain_all[-which(seedrain_all$species%in%c("hieronyma alchorneoides", "pentaclethra macroloba", "virola koschnyi", "vochysia guatemalensis")),]
 
 #write this as a csv file and export it as a unique dataset
-write.csv(removed_species, "seedrain_nocanopysp_tidy.csv", row.names = FALSE)
+write.csv(removed_species, "seedrain_notrtsp_tidy.csv", row.names = FALSE)
 
 #######creating a subset of data for one years worth of data
 # Decided to clip off the first month and the last month because were getting used to data collection the first month and were rushing in the last month
@@ -268,7 +268,7 @@ summary(removed_sub$date)
 ###HAHAH it worked. And what R!!!
 
 #Write as a new csv for the subset with removed canopy
-write.csv(removed_sub, "yearsub_no_cpysp.csv", row.names = FALSE)
+write.csv(removed_sub, "yearsub_no_trtsp.csv", row.names = FALSE)
 
 
 #all files were written 5 April 2017
