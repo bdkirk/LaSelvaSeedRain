@@ -9,7 +9,7 @@ library(ggplot2); library(car); library(lsmeans); library(stats)
 
 #bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
-divanalysis <- read.csv("div_sub_nocpy.csv")
+divanalysis <- read.csv("div_sub_notrtsp.csv")
 
 tail(divanalysis)
 str(divanalysis)
@@ -111,7 +111,7 @@ ggplot(divanalysis, aes(block, richness))+
 
 ###########  Analysis   ###############
 
-#1) Does abundance of seeds differ between overstory treatments? 
+#1) Does species richness of seeds differ between overstory treatments? 
 
 #using all data
 #total_seednum~ block+canopysp, family=gaussian  #by default, an identity link
