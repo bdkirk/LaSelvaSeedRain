@@ -34,6 +34,11 @@ abline(0,0)
 anova(mabundanalysis)
 summary(mabundanalysis)
 
+lsmeans(mabundanalysis, "canopysp", contr = "pairwise")
+#no significance found
+lsmeans(mabundanalysis, "meshtype", contr = "pairwise")
+#significance found
+
 #######Diversity Analysis######
 #load library
 library(vegan); library(base); library (stats); library(lme4)
@@ -53,7 +58,7 @@ ggplot(mesh_diversity, aes(block, richness, color=meshtype))+
 
 ##Residuals##
 
-mrichanalysis <- glmer(richness~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity, family=poisson)
+mrichanalysis <- glmer(richness~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity, family=poisson) #model fails to converge when you add in the individual observation of trap as a random effect.  Should trap be a fixed effect?  How can this be incorportated?
 
 mesh_rich.res <-  resid(mrichanalysis) 
 mesh_rich.pred <- predict(mrichanalysis)
@@ -66,6 +71,8 @@ anova(mrichanalysis)
 #OR
 plot(mrichanalysis)
 
+lsmeans(mrichanalysis, "meshtype", contr= "pairwise")
+#This is significant
 
 
 #2) Diversity
@@ -100,6 +107,9 @@ summary(mesh_divanalysis)
 #try using lm and glmer instead of lmer; R is unhappy when anything besides lmer is used.
 #mesh_divanalysis2 <- glmer(diversity~canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity)
 
+lsmeans(mesh_divanalysis, "meshtype", contr= "pairwise")
+#this is significant
+
 #3) Evenness
 
 #i.	plot response and predictors to check for outliers  (only with continuous data)
@@ -128,8 +138,8 @@ plot(mesh_evenanalysis)
 anova(mesh_evenanalysis)
 summary(mesh_evenanalysis)
 
-
-
+lsmeans(mesh_evenanalysis, "meshtype", contr="pairwise")
+#no significance found
 
 ######## Composition ###############
 
