@@ -5,12 +5,18 @@
 #####Abundance Analysis#####
 
 #Libraries
-library(dplyr); library(plyr); library(stats); library(lme4); library(readr)
+library(dplyr); library(plyr); library(stats); library(lme4); library(readr); library(ggplot2)
 
 #Bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
 meshabund <- read.csv("Mesh_abund_analysis.csv")
+
+
+ggplot(meshabund, aes(block, seednum, color=meshtype))+
+  geom_boxplot()+
+  facet_grid(.~canopysp)+
+  ggtitle("Treatment abundance by mesh type")
 
 #plot residuals
 mabundanalysis <- glmer(seednum~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block)+ (1|trap), family= "poisson", data = meshabund)
@@ -42,7 +48,8 @@ boxplot(mesh_diversity$richness~ mesh_diversity$canopysp, main= "Seed species ri
 
 ggplot(mesh_diversity, aes(block, richness, color=meshtype))+
   geom_boxplot()+
-  facet_grid(.~canopysp)
+  facet_grid(.~canopysp)+
+  ggtitle("Richness for treatments by mesh type")
 
 ##Residuals##
 
@@ -70,7 +77,8 @@ boxplot(mesh_diversity$diversity~ mesh_diversity$canopysp, main= "Seed species d
 
 ggplot(mesh_diversity, aes(block, diversity, color=meshtype))+
   geom_boxplot()+
-  facet_grid(.~canopysp)
+  facet_grid(.~canopysp)+
+  ggtitle("Diversity by Mesh Type")
 
 ##Residuals##
 
@@ -101,7 +109,8 @@ boxplot(mesh_diversity$evenness~ mesh_diversity$canopysp, main= "Seed species ev
 
 ggplot(mesh_diversity, aes(block, evenness, color=meshtype))+
   geom_boxplot()+
-  facet_grid(.~canopysp)
+  facet_grid(.~canopysp)+
+  ggtitle("Evenness by Mesh Type")
 
 ##Residuals##
 
@@ -173,7 +182,9 @@ mesh_seedcomp <- mesh_compdata[,2:124]
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
 mesh_seedcomp.bc <- vegdist(mesh_seedcomp)
 # PERMANOVA (Anderson et al. 2001)
-procD.lm(mesh_seedcomp.bc ~ canopysp*block, data = mesh_compdata) 
+procD.lm(mesh_seedcomp.bc ~ canopysp+block+meshtype, data = mesh_compdata) 
+procD.lm(mesh_seedcomp.bc ~ canopysp+block+trap+meshtype, data = mesh_compdata)
+
 
 #This does a pair-wise comparison of the data
 advanced.procD.lm(mesh_seedcomp.bc ~ canopysp, ~ 1, ~ canopysp, data = mesh_compdata) # Four overstory treatments compared with one another
