@@ -39,28 +39,32 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
 # Using Bray-Curtis dissimilarity index
 #Get data
 compdata <- read.csv("comp_sub_nocpy.csv")
-###note: this data file does not have block or canopysp.  will need to adjust when doing permanova below
 
 ncol(compdata)
 str(compdata[,1:10])
 compdata$block <- as.factor(compdata$block)
 
 #get only the species data from the compdata file
-seed_comp <- compdata[,4:127]
+seed_comp <- compdata[,4:126]
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
 seedcomp.bc <- vegdist(seed_comp)
 # PERMANOVA (Anderson et al. 2001)
-procD.lm(seedcomp.bc ~ canopysp*block, data = compdata) # significant interaction found and significant difference between blocks
+procD.lm(seedcomp.bc ~ treatment+block, data = compdata) # significant interaction found and significant difference between blocks
+#Dr. Dixon recommended using the + or additive to account for the interaction
 
 #This does a pair-wise comparison of the data
-advanced.procD.lm(seedcomp.bc ~ canopysp, ~ 1, ~ canopysp, data = compdata) # Four overstory treatments compared with one another
+advanced.procD.lm(seedcomp.bc ~ treatment, ~ 1, ~ treatment, data = compdata) # Four overstory treatments compared with one another, no significant difference
+advanced.procD.lm(seedcomp.bc ~ treatment*block , ~1, ~ treatment, data = compdata) #treatment plus block combo was significantly different
+advanced.procD.lm(seedcomp.bc ~ treatment + plot, ~ treatment, ~ plot, data = compdata)
 
 #NMDS
 seedcomp.mds <- metaMDS(seed_comp, autotransform = F, expand = F, k = 2, try = 50)
 seedcomp.mds$stress
 #Ordination
-nmsplot(seedcomp.mds, compdata$canopysp, "Hial", "Vogu", "Pema", "Viko",
+nmsplot(seedcomp.mds, compdata$treatment, "Hial", "Vogu", "Pema", "Viko",
         "bottomleft", c("HIAL", "VOGU", "PEMA", "VIKO"))
+##For some reason points are not displaying.
+
 #I am not sure what this does.
 stressplot(seedcomp.mds)
 
@@ -89,4 +93,7 @@ NMDS.scree(seed_comp, reps=3, max_factors=7)
 #Based on this, you might use four factors?
 seedcomp.mds2 <- metaMDS(seed_comp, autotransform = F, expand = F, k = 4, try = 100)
 stressplot(seedcomp.mds2)
+nmsplot(seedcomp.mds2, compdata$treatment, "Hial", "Vogu", "Pema", "Viko",
+        "bottomleft", c("HIAL", "VOGU", "PEMA", "VIKO"))
+
 ### Ran on 21 May and did not find significant difference between the treatments ###
