@@ -1,5 +1,5 @@
 # Started on 12 May 2017
-# First analysis, will follow Haldre's outline
+# First analysis, will follow Haldre's outline & from Zurr paper
 # This is an analysis of effects of planted tree species on the abundance of seed rain.  The experimental unit is the plot.  We are looking at 15 plots with 4 treatment groups of planted trees.
 #This will look at the abundance for all species seeds summed over a year.
 
@@ -10,69 +10,106 @@ library(ggplot2); library(car); library(lsmeans); library(stats)
 
 #Bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
-abundanalysis <- read.csv("abund_sub_nocpy.csv")
+abundanalysis <- read.csv("abund_sub_notrtsp.csv")
 
-#First need to log transform the data because the numbers are very large.
-abundanalysis$logsum <- log(abundanalysis$total_seednum)
-str(abundanalysis)
-abundanalysis$block <- as.factor(abundanalysis$block)
-abundanalysis$canopysp <- as.factor(abundanalysis$canopysp)
+#bring in data for other y response variables
+setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/RawData")
+abundattrib <- read.csv("Plot_attributes.csv")
+
+#Bind columns together to look at attributes
+abund <- cbind(abundanalysis, abundattrib)
+
+
+#add in se and mean to dataset
+library(dplyr)
+abund_summary <- abundanalysis %>% # the names of the new data frame and the data frame to be summarised
+  group_by(canopysp) %>%   # the grouping variable
+  summarise(mean_PL = mean(total_seednum),  # calculates the mean of each group
+            sd_PL = sd(total_seednum), # calculates the standard deviation of each group
+            n_PL = n(),  # calculates the sample size per group
+            SE_PL = sd(total_seednum)/sqrt(n())) # calculates the standard error of each group
+  
+#make plot
+library(ggplot2)
+ggplot(abund_summary, aes(canopysp, mean_PL, fill= canopysp))+
+  geom_boxplot()+
+  ggtitle("Total Abundance Across Treatments")+
+  geom_errorbar(abund_summary, aes(ymin=mean_PL-SE_PL, ymax=mean_PL+SE_PL), width=0.2)+
+  xlab("Planted Tree Treatments")+
+  ylab("Abundance")+
+  guides(fill=FALSE)
+
+#Log transform the data because the numbers are very large. Don't really need to do this step
+#abundanalysis$logsum <- log(abundanalysis$total_seednum)
+#str(abundanalysis)
+#abundanalysis$block <- as.factor(abundanalysis$block)
+#abundanalysis$canopysp <- as.factor(abundanalysis$canopysp)
 
 ########### Data Exploration #########
-##a.  Outliers in Y / Outliers in X 
+##a.  Outliers in Y / Outliers in X (Step 1)
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
-hist(abundanalysis$logsum)
-boxplot(abundanalysis$total_seednum~ abundanalysis$canopysp, xlab="canopysp", ylab="seednum")
-boxplot(abundanalysis$logsum~ abundanalysis$canopysp, xlab="canopysp", ylab="seednum")
+hist(abundanalysis$total_seednum)
+boxplot(abundanalysis$total_seednum~ abundanalysis$canopysp, xlab="canopysp", ylab="seednum", main= "Seed abundance per treatment")
+
+#No difference found when looking at logsum of abundance.
+#boxplot(abundanalysis$logsum~ abundanalysis$canopysp, xlab="canopysp", ylab="seednum")
 
 #Much more variance in hial
 #one outlier in Y, hial 2 but will keep, X is categorical
 
-##b.	Examine Zero inflation Y
+##b.	Examine Zero inflation Y (Step 4)
 #Not applicable for abundance question because there are no zeros when summed to the plot level and response is continuous (>0)
 
-##c.	Collinearity X: correlation between covariates
+##c.	Collinearity X: correlation between covariates (Step 5)
 #i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
 with(abundanalysis, table(canopysp, total_seednum))
-boxplot(abundanalysis$total_seednum~abundanalysis$canopysp, main= "Seed abundance per treatment")
-#have all combinations here. 
+
 #Missing one plot, vogu1.
 ##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
 #check variance inflation factor
-vif(glm(total_seednum~ canopysp +block, data = abundanalysis))
+vif(glm(total_seednum~ canopysp +block + Dist, data = abund))
 # model shows interactions when include the canopysp*block, shows collinearity
+#vif was less than 10
 
-#d.	Homogeneity of variance?
+#d.	Homogeneity of variance? (Step 2)
 #Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
 # i.	Plot response against each predictor and random effect. 
-ggplot(abundanalysis, aes(canopysp, logsum, color=block))+
+ggplot(abundanalysis, aes(canopysp, total_seednum, color=block))+
   geom_boxplot()
-#more variance with Hial
+#more variance with Hial, minimal variance with vogu. pema and viko have a similar variance.
 
-#e.	Independence Y - are Y's independent? 
+#e.	Independence Y - are Y's independent? (Step 8)
 #1.	Is there a pattern across time or space that is not incorporated in the model? 
 ggplot(abundanalysis, aes(canopysp, total_seednum, color=canopysp))+
   geom_boxplot()+
   facet_grid(.~block)
 
-with(abundanalysis, ftable(canopysp, block))
+#2. Perhaps consider distance to the mature forest as a factor.
+ggplot(abund, aes(Dist, total_seednum))+
+  geom_point()
+
+hist(abund$Dist)
+boxplot(abund$Dist ~ abund$total_seednum)
+
+with(abund, ftable(canopysp, Dist))
 #This table is not really useful in this case
 
 #More variance with block 2 and more variance with Hial 
 
 #ii. Are there other potential factors that reduce independence of Y’s? 
-#timing is similar, can't think of anything else that might matter. 
+#timing is the same.
 
 #f.	Sufficient data?  
 ##As a rule of thumb, (all models), should have 15 to 20 observations for each parameter. So, if have 50 observations, should really only have 3 parameters. 
-# There are 15 observations with really one parameter, total_seednum
+# There are 15 observations with one parameter, total_seednum
 
 #i.	Do all levels of Island have adequate samples of at each level of Native? 	Examine interactions
 #Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
 with(abundanalysis, table(block, canopysp))
 
 ###Katie Rey Data Visualization####
+# This is an alternative way of exploring the data.
 library(dplyr); library(ggplot2)
 #Find outliers
 ggplot(abundanalysis, aes(canopysp, total_seednum))+
@@ -236,6 +273,9 @@ library(lme4)
 #change model to glmer because this will account for overdispersion.
 abund.glm <- glmer(total_seednum ~ block+canopysp+(1|plot), data=abundanalysis, 
                   family = poisson)
+
+#try making block a fixed effect rather than a random effect.
+
 abund.res <- resid(abund.glm)
 abund.pred <- predict(abund.glm)
 
