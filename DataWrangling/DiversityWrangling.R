@@ -10,7 +10,7 @@ library(readxl); library(plyr); library(ggplot2); library(reshape2); library(bas
 #bring in original data file with overstory species removed that has been cut to the specific dates
 setwd("Data/TidyData")
 
-seeddiv <- read.csv("yearsub_no_cpysp.csv")
+seeddiv <- read.csv("yearsub_no_trtsp.csv")
 
 #summarise the data by plot
 plotsum <- ddply(seeddiv, .(plot, species), summarise, seednum=sum(total_seednum))
@@ -39,17 +39,18 @@ y$diversity <- diversity(y, index = "shannon")
 y$evenness <- (y$diversity/(log(y$richness)))
 
 #change diversity to something more recognizable
-y$diversity <- exp(diversity(y, index = "shannon"))
+y$divnorm <- exp(diversity(y, index = "shannon"))
 
 #bind x and y back together
-div_data2 <- cbind(x, y[,124:126])
+div_data2 <- cbind(x, y[,124:127])
 tail(div_data2)
 #create csv file that can be used to do NMDS calculations
-write.csv(div_data2, "div_sub_nocpy.csv", row.names = FALSE)
+write.csv(div_data2, "div_sub_notrtsp.csv", row.names = FALSE)
 
-# NEED to manually add in block and canopysp
+# NEED to manually add in block and treatment
 
 #finished on 21 May 2017
+#After meeting with Dr. Dixon on 30 June decided to not use the normalized data for the analysis because through the analysis it will be normalized anyway.
 
-##This data file has no overstory species and is subsetted for a year long period from 2-24-14 to 2-23-15
+##This data file has no treatment species and is subsetted for a year long period from 2-24-14 to 2-23-15
 
