@@ -1,16 +1,19 @@
 # Started on 12 May 2017
-# First analysis, will follow Haldre's outline & from Zurr paper
+# Data exploration will follow Haldre's outline which is based on Zuur paper
 # This is an analysis of effects of planted tree species on the abundance of seed rain.  The experimental unit is the plot.  We are looking at 15 plots with 4 treatment groups of planted trees.
 #This will look at the abundance for all species seeds summed over a year.
 
 ################### Abundance Analysis ##########
 
 #Load libraries
-library(ggplot2); library(car); library(lsmeans); library(stats)
+library(ggplot2); library(car); library(lsmeans); library(stats); library(lme4)
 
 #Bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 abundanalysis <- read.csv("abund_sub_notrtsp.csv")
+str(abundanalysis) #manually added in two columns after making the tidy data file to distinguish the block and plot
+abundanalysis$block <- as.factor(abundanalysis$block)
+str(abundanalysis) #verify block is a factor
 
 #bring in data for other y response variables
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/RawData")
@@ -18,6 +21,17 @@ abundattrib <- read.csv("Plot_attributes.csv")
 
 #Bind columns together to look at attributes
 abund <- cbind(abundanalysis, abundattrib)
+
+#Make sure all columns are appropriate characters/numbers, etc.
+str(abund)
+abund$Dist <- as.factor(abund$Dist)
+abund$ï..Plot <- NULL
+
+#Plotting to look at how the data relates
+plot(abund$total_seednum, abund$Slope)
+plot(abund$total_seednum, abund$Aspect)
+plot(abund$total_seednum, abund$Dist)
+#plot will vary directly with these covariates
 
 
 #add in se and mean to dataset
@@ -31,15 +45,20 @@ abund_summary <- abundanalysis %>% # the names of the new data frame and the dat
   
 #make plot
 library(ggplot2)
-ggplot(abund_summary, aes(canopysp, mean_PL, fill= canopysp))+
-  geom_boxplot()+
-  ggtitle("Total Abundance Across Treatments")+
-  geom_errorbar(abund_summary, aes(ymin=mean_PL-SE_PL, ymax=mean_PL+SE_PL), width=0.2)+
-  xlab("Planted Tree Treatments")+
-  ylab("Abundance")+
-  guides(fill=FALSE)
+#ggplot(abund_summary, aes(canopysp, mean_PL, fill= canopysp))+
+  #geom_boxplot()+
+  #ggtitle("Total Abundance Across Treatments")+
+  #geom_errorbar(abund_summary, aes(ymin=mean_PL-SE_PL, ymax=mean_PL+SE_PL), width=0.2)+
+  #xlab("Planted Tree Treatments")+
+  #ylab("Abundance")+
+  #guides(fill=FALSE)
+
+#looking for trend between distance from forest and total seed num across treatments, none found.
+ggplot(abund, aes (Slope, total_seednum))+
+  geom_point(aes(color = canopysp))
 
 #Log transform the data because the numbers are very large. Don't really need to do this step
+#decided not to logtransform the data because it is count data that will have overdispersion that will be taken into account with 
 #abundanalysis$logsum <- log(abundanalysis$total_seednum)
 #str(abundanalysis)
 #abundanalysis$block <- as.factor(abundanalysis$block)
@@ -50,7 +69,12 @@ ggplot(abund_summary, aes(canopysp, mean_PL, fill= canopysp))+
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
 hist(abundanalysis$total_seednum)
-boxplot(abundanalysis$total_seednum~ abundanalysis$canopysp, xlab="canopysp", ylab="seednum", main= "Seed abundance per treatment")
+boxplot(abundanalysis$total_seednum~ abundanalysis$canopysp, xlab="treatment", ylab="seednum", main= "Seed abundance per treatment")
+
+
+#look at distance
+boxplot(abund$total_seednum~abund$Dist)
+#no clear trend seen here
 
 #No difference found when looking at logsum of abundance.
 #boxplot(abundanalysis$logsum~ abundanalysis$canopysp, xlab="canopysp", ylab="seednum")
@@ -64,11 +88,13 @@ boxplot(abundanalysis$total_seednum~ abundanalysis$canopysp, xlab="canopysp", yl
 ##c.	Collinearity X: correlation between covariates (Step 5)
 #i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
 with(abundanalysis, table(canopysp, total_seednum))
+with(abund, table(Dist, total_seednum))
 
 #Missing one plot, vogu1.
 ##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
 #check variance inflation factor
 vif(glm(total_seednum~ canopysp +block + Dist, data = abund))
+vif(glm(total_seednum~canopysp +Dist, data = abund))
 # model shows interactions when include the canopysp*block, shows collinearity
 #vif was less than 10
 
@@ -268,13 +294,12 @@ anova(abund.glm)
 head(abundanalysis)
 length(unique(abundanalysis$plot))
 
-library(lme4)
 
-#change model to glmer because this will account for overdispersion.
+
+
+#change model to glmer because this will account for overdispersion with the poisson distribution.
 abund.glm <- glmer(total_seednum ~ block+canopysp+(1|plot), data=abundanalysis, 
                   family = poisson)
-
-#try making block a fixed effect rather than a random effect.
 
 abund.res <- resid(abund.glm)
 abund.pred <- predict(abund.glm)
@@ -287,11 +312,51 @@ summary(abund.glm)
 
 #find Tukeys (HSD) and use for this data
 #if p-value is greater than 0.05, don't need to do HSD
-
-
 lsmeans(abund.glm, "canopysp", contr= "pairwise")
+#These p-values are not t-based p-values that account for df but you can get those by using the code below:
 
+#ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
 
+#contrast for hial-pema (-0.343)
+ptukey((-0.343*sqrt(2)), nmeans= 4, df=8, lower = F)
+#=1
 
+#contrast for hial-viko (-0.163)
+ptukey(-0.163*sqrt(2), nmeans= 4, df=8, lower = F)
+#=1
 
+#contrast for hial-vogu (2.247)
+ptukey(2.247*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.19
 
+#contrast for viko-pema (0.181)
+ptukey(0.181*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.9977
+
+#contrast for vogu-pema (2.558)
+ptukey(2.558*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.124
+
+#contrast for viko-vogu (2.394)
+ptukey(2.394*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.1556
+
+####Have not figured out how to more efficiently export output and do a conversion.
+temp <- lsmeans(abund.glm, "canopysp", contr= "pairwise")
+
+str(abund)
+abund$Dist <- as.factor(abund$Dist)
+#Incorporating distance into the model: None of the below works right now.  Need to reread email from Dr. Dixon on 3 July.
+abunddist.glm <- glmer(total_seednum~canopysp+Dist+(1|plot), data= abund, family = poisson)
+
+summary(abunddist.glm)
+anova(abunddist.glm)
+
+library(lsmeans)
+lsmeans(abunddist.glm, "Dist", contr="pairwise")
+
+qqnorm(abundanalysis$total_seednum)
+qqline(abundanalysis$total_seednum, col = 'red')
+
+#the above text produces a Normal Quantile Plot and this indicates that the data is not normally distributed as the points do not line up exactly on the line.  In this case it is better to use non-parametric methods for testing.
+hist(abund.res)
