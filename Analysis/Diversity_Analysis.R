@@ -19,7 +19,7 @@ divanalysis$block <- as.factor(divanalysis$block)
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
 hist(divanalysis$richness)
-boxplot(divanalysis$richness~ divanalysis$canopysp, main= "Seed species richness per treatment", xlab="canopysp", ylab="species richness")
+boxplot(divanalysis$richness~ divanalysis$treatment, main= "Seed species richness per treatment", xlab="treatment", ylab="species richness")
 
 #pema appears to have the lowest species richness
 
@@ -28,34 +28,34 @@ boxplot(divanalysis$richness~ divanalysis$canopysp, main= "Seed species richness
 
 ##c.	Collinearity X: correlation between covariates
 #i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
-with(divanalysis, table(canopysp, richness))
-boxplot(divanalysis$richness~divanalysis$canopysp, main= "Seed species richness per treatment")
+with(divanalysis, table(treatment, richness))
+boxplot(divanalysis$richness~divanalysis$treatment, main= "Seed species richness per treatment")
 #have all combinations here. 
 #Missing one plot, vogu1.
 ##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
 #check variance inflation factor
-vif(glm(richness~ canopysp+block, data = divanalysis))
-vif(glm(richness~ canopysp*block, data = divanalysis))
-# model shows interactions when include the canopysp*block, shows collinearity
+vif(glm(richness~ treatment+block, data = divanalysis))
+vif(glm(richness~ treatment*block, data = divanalysis))
+# model shows interactions when include the treatment*block, shows collinearity
 
 #d.	Homogeneity of variance?
 #Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
 # i.	Plot response against each predictor and random effect. 
-ggplot(divanalysis, aes(canopysp, richness))+
+ggplot(divanalysis, aes(treatment, richness))+
   geom_boxplot()
 #more variance with Hial
 
 #e.	Independence Y - are Y's independent? 
 #1.	Is there a pattern across time or space that is not incorporated in the model? 
-ggplot(divanalysis, aes(canopysp, richness, color=canopysp))+
+ggplot(divanalysis, aes(treatment, richness, color=treatment))+
   geom_boxplot()+
   facet_grid(.~block)
 
-ggplot(divanalysis, aes(block, richness, color=canopysp))+
+ggplot(divanalysis, aes(block, richness, color=treatment))+
   geom_boxplot()+
-  facet_grid(.~canopysp)
+  facet_grid(.~treatment)
 
-with(divanalysis, ftable(canopysp, block))
+with(divanalysis, ftable(treatment, block))
 #This table is not really useful in this case
 
 #More variance with block 2 and more variance with Hial 
@@ -69,12 +69,12 @@ with(divanalysis, ftable(canopysp, block))
 
 #i.	Do all levels of Island have adequate samples of at each level of Native? 	Examine interactions
 #Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
-with(divanalysis, table(block, canopysp))
+with(divanalysis, table(block, treatment))
 
 ###Katie Rey Data Visualization####
 library(dplyr); library(ggplot2)
 #Find outliers
-ggplot(divanalysis, aes(canopysp, richness))+
+ggplot(divanalysis, aes(treatment, richness))+
   geom_point()
 #Appears to be more variance in pema
 
@@ -84,7 +84,7 @@ cbPalette <- c("#999999", "#56B4E9", "#F0E442", "#CC79A7")
 
 divanalysis %>% 
   filter(!is.na(richness)) %>%
-  ggplot()+geom_bar(aes(canopysp,fill=as.factor(canopysp)))+
+  ggplot()+geom_bar(aes(treatment,fill=as.factor(treatment)))+
   facet_grid(block~.)+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
@@ -93,8 +93,8 @@ divanalysis %>%
 
 #Non constant variance: helps to identify if all of the treatments have the same variance
 ggplot(divanalysis, aes(block, richness))+
-  geom_boxplot(aes(fill=canopysp))+
-  facet_grid(.~canopysp)+
+  geom_boxplot(aes(fill=treatment))+
+  facet_grid(.~treatment)+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
 
@@ -114,15 +114,15 @@ ggplot(divanalysis, aes(block, richness))+
 #1) Does species richness of seeds differ between overstory treatments? 
 
 #using all data
-#total_seednum~ block+canopysp, family=gaussian  #by default, an identity link
+#total_seednum~ block+treatment, family=gaussian  #by default, an identity link
 
-richnessmod1<-glm(richness~block+canopysp, data=divanalysis)
+richnessmod1<-glm(richness~block+treatment, data=divanalysis)
 summary(richnessmod1)
 anova(richnessmod1) #should not use if unbalanced
 
 richnessmod2 <- glm(richness~plot, data= divanalysis)
-richnessmod3 <- glm(richness~canopysp*block, data = divanalysis)
-richnessmod4 <- glm(richness~canopysp, data = divanalysis)
+richnessmod3 <- glm(richness~treatment*block, data = divanalysis)
+richnessmod4 <- glm(richness~treatment, data = divanalysis)
 richnessmod5 <- glm(richness~block, data = divanalysis)
 richnessmodnull <- glm(richness~1, data = divanalysis)
 anova(richnessmod4)
@@ -135,37 +135,37 @@ head(model.matrix(abundmod1))
 
 # anova(model) gives Type I sums of squares, which means the reference level is tested first and then other levels, and then interactions. R defaults to treatment contrasts. Can get different results for unbalanced datasets depending on which factor is entered first in the model and thus considered first. 
 
-with(abundanalysis,tapply(total_seednum, list(canopysp, block), mean))
+with(abundanalysis,tapply(total_seednum, list(treatment, block), mean))
 
 ##can use car package to do Type II or III sums of squares
 #Type III can be used with interactions
-Anova(abundmod1, type="III") 
+Anova(richnessmod1, type="III") 
 
 #explore contrasts
 options('contrasts') #shows what contrasts R is using
 #can set contrasts to SAS default. 
-abundmod1a<-glm(total_seednum~block+canopysp, data=, contrasts = list(canopysp = "contr.SAS", block="contr.SAS"))
+abundmod1a<-glm(total_seednum~block+treatment, data=, contrasts = list(treatment = "contr.SAS", block="contr.SAS"))
 summary(abundmod1a)
 
 #Type II
-Anova(glm(total_seednum~block+canopysp, data=abundanalysis), type="II")  #note - type II can't handle interactions
+Anova(glm(total_seednum~block+treatment, data=abundanalysis), type="II")  #note - type II can't handle interactions
 #compare against 
-anova(glm(total_seednum~canopysp+block, data=abundanalysis))
-anova(glm(total_seednum~block+canopysp, data=abundanalysis))
+anova(glm(total_seednum~treatment+block, data=abundanalysis))
+anova(glm(total_seednum~block+treatment, data=abundanalysis))
 
 #lsmeans
-cpyblk<-pairs(lsmeans(abundmod1, ~canopysp | block)) # in lsmeans package
-blkcpy <- pairs(lsmeans(abundmod1, ~block | canopysp))
+cpyblk<-pairs(lsmeans(abundmod1, ~treatment | block)) # in lsmeans package
+blkcpy <- pairs(lsmeans(abundmod1, ~block | treatment))
 rbind(cpyblk, blkcpy)
 
 ####### 2. Classic model selection: Create all sub-models. Use LRT to come up with best model. #####
-abundmod1<-glm(logsum~block+canopysp, data=abundanalysis)
-abundmod2<-glm(total_seednum~canopysp+block, data=abundanalysis)
-abundmod3<-glm(logsum~canopysp, data=abundanalysis)
+abundmod1<-glm(logsum~block+treatment, data=abundanalysis)
+abundmod2<-glm(total_seednum~treatment+block, data=abundanalysis)
+abundmod3<-glm(logsum~treatment, data=abundanalysis)
 abundmod4<-glm(logsum~block, data=abundanalysis)
 abundmod5 <- glm(total_seednum~plot, data=abundanalysis)
 abundmod_null<-glm(total_seednum~1, data=abundanalysis)
-abundmod6 <- glm(logsum~canopysp*block, data=abundanalysis)
+abundmod6 <- glm(logsum~treatment*block, data=abundanalysis)
 
 summary(abundmod5)
 anova(abundmod1, abundmod2, test = "Rao")  #model 1 not sig better than 2
@@ -210,12 +210,12 @@ plot(x = F1,
      cex.lab = 1.5)
 abline(h = 0, lty = 2)
 
-plot(x=abundanalysis$canopysp, y=F1) #heterogeneity in residuals bt canopysp
+plot(x=abundanalysis$treatment, y=F1) #heterogeneity in residuals bt treatment
 plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
 plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
 
 ########### RESIDUALS #################
-richnessmod1<-glmer(richness~block+canopysp+(1|plot), family = poisson, data=divanalysis)
+richnessmod1<-glmer(richness~block+treatment+(1|plot), family = poisson, data=divanalysis)
 summary(richnessmod1)
 anova(richnessmod1, test= "F") 
 
@@ -228,8 +228,45 @@ plot(rich.pred, rich.res, ylab="Residuals", xlab="predicted values", main="resid
 abline(0, 0) 
 
  
-#chedk for normality
+#check for normality
 hist(rich.res)
+
+#check for normality with q-qplot
+qqnorm(divanalysis$richness)
+qqline(divanalysis$richness, col = 'red')
+
+
+lsmeans(richnessmod1, "treatment", contr= "pairwise")
+#These p-values are not t-based p-values that account for df but you can get those by using the code below:
+
+#ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
+
+#contrast for hial-pema (3.465)
+ptukey((3.465*sqrt(2)), nmeans= 4, df=8, lower = F)
+#=0.0346
+
+#contrast for hial-viko (0.311)
+ptukey(0.311*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.9888
+
+#contrast for hial-vogu (-0.092)
+ptukey(-0.092*sqrt(2), nmeans= 4, df=8, lower = F)
+#=1
+
+#contrast for viko-pema (-3.163)
+ptukey(-3.163*sqrt(2), nmeans= 4, df=8, lower = F)
+#=1
+
+#contrast for vogu-pema (-3.266)
+ptukey(-3.266*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 1
+
+#contrast for viko-vogu (-0.372)
+ptukey(-0.372*sqrt(2), nmeans= 4, df=8, lower = F)
+#=1
+
+
+
 
 ################################################################################
 ######################### Diversity #############################################
@@ -239,7 +276,7 @@ hist(rich.res)
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
 hist(divanalysis$diversity)
-boxplot(divanalysis$diversity~ divanalysis$canopysp, main= "Species Diversity per treatment", xlab="canopysp", ylab="species diversity")
+boxplot(divanalysis$diversity~ divanalysis$treatment, main= "Species Diversity per treatment", xlab="treatment", ylab="species diversity")
 
 #vogu and hial have greatest diversity 
 
@@ -248,35 +285,35 @@ boxplot(divanalysis$diversity~ divanalysis$canopysp, main= "Species Diversity pe
 
 ##c.	Collinearity X: correlation between covariates
 #i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
-with(divanalysis, table(canopysp, diversity))
-boxplot(divanalysis$diversity~divanalysis$canopysp, main= "Seed species diversity per treatment")
+with(divanalysis, table(treatment, diversity))
+boxplot(divanalysis$diversity~divanalysis$treatment, main= "Seed species diversity per treatment")
 #have all combinations here. 
 #Missing one plot, vogu1.
 ##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
 #check variance inflation factor
-vif(glm(diversity~ canopysp+block, data = divanalysis))
-vif(glm(diversity~ canopysp*block, data = divanalysis))
-# model shows interactions when include the canopysp*block, shows collinearity
+vif(glm(diversity~ treatment+block, data = divanalysis))
+#vif(glm(diversity~ treatment*block, data = divanalysis))
+# model shows interactions when include the treatment*block, shows collinearity
 
 #d.	Homogeneity of variance?
 #Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
 # i.	Plot response against each predictor and random effect. 
-ggplot(divanalysis, aes(canopysp, diversity))+
+ggplot(divanalysis, aes(treatment, diversity))+
   geom_boxplot()
 #more variance within vogu, one outlier in pema
 
 #e.	Independence Y - are Y's independent? 
 #1.	Is there a pattern across time or space that is not incorporated in the model? 
-ggplot(divanalysis, aes(canopysp, diversity, color=canopysp))+
+ggplot(divanalysis, aes(treatment, diversity, color=treatment))+
   geom_boxplot()+
   facet_grid(.~block)
 
 ###this is the better one
-ggplot(divanalysis, aes(block, diversity, color=canopysp))+
+ggplot(divanalysis, aes(block, diversity, color=treatment))+
   geom_boxplot()+
-  facet_grid(.~canopysp)
+  facet_grid(.~treatment)
 
-with(divanalysis, ftable(canopysp, block))
+with(divanalysis, ftable(treatment, block))
 #This table is not really useful in this case
 
 #More variance with block 2 and more variance with Hial 
@@ -290,12 +327,13 @@ with(divanalysis, ftable(canopysp, block))
 
 #i.	Do all levels of Island have adequate samples of at each level of Native? 	Examine interactions
 #Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
-with(divanalysis, table(block, canopysp))
+with(divanalysis, table(block, treatment))
 
 ###Katie Rey Data Visualization####
+
 library(dplyr); library(ggplot2)
 #Find outliers
-ggplot(divanalysis, aes(canopysp, diversity))+
+ggplot(divanalysis, aes(treatment, diversity))+
   geom_point()
 #Appears to be more variance in pema
 
@@ -305,7 +343,7 @@ cbPalette <- c("#999999", "#56B4E9", "#F0E442", "#CC79A7")
 
 divanalysis %>% 
   filter(!is.na(diversity)) %>%
-  ggplot()+geom_bar(aes(canopysp,fill=as.factor(canopysp)))+
+  ggplot()+geom_bar(aes(treatment,fill=as.factor(treatment)))+
   facet_grid(block~.)+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
@@ -314,8 +352,8 @@ divanalysis %>%
 
 #Non constant variance: helps to identify if all of the treatments have the same variance
 ggplot(divanalysis, aes(block, diversity))+
-  geom_boxplot(aes(fill=canopysp))+
-  facet_grid(.~canopysp)+
+  geom_boxplot(aes(fill=treatment))+
+  facet_grid(.~treatment)+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
 
@@ -334,15 +372,15 @@ ggplot(divanalysis, aes(block, diversity))+
 #1) Does abundance of seeds differ between overstory treatments? 
 
 #using all data
-#total_seednum~ block+canopysp, family=gaussian  #by default, an identity link
+#total_seednum~ block+treatment, family=gaussian  #by default, an identity link
 
-diversitymod1<-glm(diversity~block+canopysp, data=divanalysis)
+diversitymod1<-glm(diversity~block+treatment, data=divanalysis)
 summary(diversitymod1)
 anova(diversitymod1) #should not use if unbalanced
 
 diversitymod2 <- glm(diversity~plot, data= divanalysis)
-diversitymod3 <- glm(diversity~canopysp*block, data = divanalysis)
-diversitymod4 <- glm(diversity~canopysp, data = divanalysis)
+diversitymod3 <- glm(diversity~treatment*block, data = divanalysis)
+diversitymod4 <- glm(diversity~treatment, data = divanalysis)
 diversitymod5 <- glm(diversity~block, data = divanalysis)
 diversitymodnull <- glm(diversity~1, data = divanalysis)
 anova(diversitymod4)
@@ -355,7 +393,7 @@ head(model.matrix(abundmod1))
 
 # anova(model) gives Type I sums of squares, which means the reference level is tested first and then other levels, and then interactions. R defaults to treatment contrasts. Can get different results for unbalanced datasets depending on which factor is entered first in the model and thus considered first. 
 
-with(abundanalysis,tapply(total_seednum, list(canopysp, block), mean))
+with(abundanalysis,tapply(total_seednum, list(treatment, block), mean))
 
 ##can use car package to do Type II or III sums of squares
 #Type III can be used with interactions
@@ -364,28 +402,28 @@ Anova(abundmod1, type="III")
 #explore contrasts
 options('contrasts') #shows what contrasts R is using
 #can set contrasts to SAS default. 
-abundmod1a<-glm(total_seednum~block+canopysp, data=, contrasts = list(canopysp = "contr.SAS", block="contr.SAS"))
+abundmod1a<-glm(total_seednum~block+treatment, data=, contrasts = list(treatment = "contr.SAS", block="contr.SAS"))
 summary(abundmod1a)
 
 #Type II
-Anova(glm(total_seednum~block+canopysp, data=abundanalysis), type="II")  #note - type II can't handle interactions
+Anova(glm(total_seednum~block+treatment, data=abundanalysis), type="II")  #note - type II can't handle interactions
 #compare against 
-anova(glm(total_seednum~canopysp+block, data=abundanalysis))
-anova(glm(total_seednum~block+canopysp, data=abundanalysis))
+anova(glm(total_seednum~treatment+block, data=abundanalysis))
+anova(glm(total_seednum~block+treatment, data=abundanalysis))
 
 #lsmeans
-cpyblk<-pairs(lsmeans(abundmod1, ~canopysp | block)) # in lsmeans package
-blkcpy <- pairs(lsmeans(abundmod1, ~block | canopysp))
+cpyblk<-pairs(lsmeans(abundmod1, ~treatment | block)) # in lsmeans package
+blkcpy <- pairs(lsmeans(abundmod1, ~block | treatment))
 rbind(cpyblk, blkcpy)
 
 ####### 2. Classic model selection: Create all sub-models. Use LRT to come up with best model. #####
-abundmod1<-glm(logsum~block+canopysp, data=abundanalysis)
-abundmod2<-glm(total_seednum~canopysp+block, data=abundanalysis)
-abundmod3<-glm(logsum~canopysp, data=abundanalysis)
+abundmod1<-glm(logsum~block+treatment, data=abundanalysis)
+abundmod2<-glm(total_seednum~treatment+block, data=abundanalysis)
+abundmod3<-glm(logsum~treatment, data=abundanalysis)
 abundmod4<-glm(logsum~block, data=abundanalysis)
 abundmod5 <- glm(total_seednum~plot, data=abundanalysis)
 abundmod_null<-glm(total_seednum~1, data=abundanalysis)
-abundmod6 <- glm(logsum~canopysp*block, data=abundanalysis)
+abundmod6 <- glm(logsum~treatment*block, data=abundanalysis)
 
 summary(abundmod5)
 anova(abundmod1, abundmod2, test = "Rao")  #model 1 not sig better than 2
@@ -430,12 +468,12 @@ plot(x = F1,
      cex.lab = 1.5)
 abline(h = 0, lty = 2)
 
-plot(x=abundanalysis$canopysp, y=F1) #heterogeneity in residuals bt canopysp
+plot(x=abundanalysis$treatment, y=F1) #heterogeneity in residuals bt treatment
 plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
 plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
 
 ########### RESIDUALS #################
-diversitymod1<-lm(diversity~block+canopysp, data=divanalysis)
+diversitymod1<-lm(diversity~block+treatment, data=divanalysis)
 summary(diversitymod1)
 anova(diversitymod1, test = "F") #should not use if unbalanced
 
@@ -447,7 +485,7 @@ div.pred <- predict(diversitymod1)
 plot(div.pred, div.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
 abline(0,0)
 #get residuals and plot residuals vs predicted values
-div.glm <- glm(diversity ~ block+canopysp, data=divanalysis) 
+div.glm <- glm(diversity ~ block+treatment, data=divanalysis) 
 div.res1 <- resid(div.glm) 
 div.pred1 <- predict(div.glm)
 plot (div.pred1, div.res1)
@@ -467,7 +505,15 @@ abline(0, 0)
 #chedk for normality
 hist(div.res)
 
-###Found no difference on 31 May between using glm or lm for shannon wiener diversity. lm is simpler so I will use this.
+#check for normality with q-qplot
+qqnorm(divanalysis$diversity)
+qqline(divanalysis$diversity, col = 'red')
+
+###Found no difference on 31 May between using glm or lm for shannon wiener diversity. lm is simpler so I will use this.  Talked with Dr. Dixon on 30 June and glm will revert to lm if the family is Guassian.
+
+lsmeans(diversitymod1, "treatment", contr= "pairwise")
+#These p-values are not t-based p-values that account for df but you can get those by using the code below:
+
 
 ################################################################################
 ######################## EVENNESS ##############################################
@@ -478,7 +524,7 @@ hist(div.res)
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
 hist(divanalysis$evenness)
-boxplot(divanalysis$evenness~ divanalysis$canopysp, main= "Species evenness per treatment", xlab="canopysp", ylab="species evenness")
+boxplot(divanalysis$evenness~ divanalysis$treatment, main= "Species evenness per treatment", xlab="treatment", ylab="species evenness")
 
 #More of a normal distribution in histogram
 #pema and hial have largest amounts of variability
@@ -488,35 +534,35 @@ boxplot(divanalysis$evenness~ divanalysis$canopysp, main= "Species evenness per 
 
 ##c.	Collinearity X: correlation between covariates
 #i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
-with(divanalysis, table(canopysp, evenness))
+with(divanalysis, table(treatment, evenness))
 
 #have all combinations here. 
 #Missing one plot, vogu1.
 ##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
 #check variance inflation factor
-vif(glm(evenness~ canopysp+block, data = divanalysis))
-vif(glm(evenness~ canopysp*block, data = divanalysis))
-# model shows interactions when include the canopysp*block, shows collinearity
+vif(glm(evenness~ treatment+block, data = divanalysis))
+vif(glm(evenness~ treatment*block, data = divanalysis))
+# model shows interactions when include the treatment*block, shows collinearity
 
 #d.	Homogeneity of variance?
 #Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
 # i.	Plot response against each predictor and random effect. 
-ggplot(divanalysis, aes(canopysp, evenness))+
+ggplot(divanalysis, aes(treatment, evenness))+
   geom_boxplot()
 #more variance within vogu, one outlier in pema
 
 #e.	Independence Y - are Y's independent? 
 #1.	Is there a pattern across time or space that is not incorporated in the model? 
-ggplot(divanalysis, aes(canopysp, evenness, color=canopysp))+
+ggplot(divanalysis, aes(treatment, evenness, color=treatment))+
   geom_boxplot()+
   facet_grid(.~block)
 
 ###this is the better one
-ggplot(divanalysis, aes(block, evenness, color=canopysp))+
+ggplot(divanalysis, aes(block, evenness, color=treatment))+
   geom_boxplot()+
-  facet_grid(.~canopysp)
+  facet_grid(.~treatment)
 
-with(divanalysis, ftable(canopysp, block))
+with(divanalysis, ftable(treatment, block))
 #This table is not really useful in this case
 
 #More variance with block 2 and more variance with Hial 
@@ -530,12 +576,12 @@ with(divanalysis, ftable(canopysp, block))
 
 #i.	Do all levels of Island have adequate samples of at each level of Native? 	Examine interactions
 #Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
-with(divanalysis, table(block, canopysp))
+with(divanalysis, table(block, treatment))
 
 ###Katie Rey Data Visualization####
 library(dplyr); library(ggplot2)
 #Find outliers
-ggplot(divanalysis, aes(canopysp, evenness))+
+ggplot(divanalysis, aes(treatment, evenness))+
   geom_point()
 #Appears to be more variance in pema
 
@@ -545,7 +591,7 @@ cbPalette <- c("#999999", "#56B4E9", "#F0E442", "#CC79A7")
 
 divanalysis %>% 
   filter(!is.na(evenness)) %>%
-  ggplot()+geom_bar(aes(canopysp,fill=as.factor(canopysp)))+
+  ggplot()+geom_bar(aes(treatment,fill=as.factor(treatment)))+
   facet_grid(block~.)+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
@@ -554,8 +600,8 @@ divanalysis %>%
 
 #Non constant variance: helps to identify if all of the treatments have the same variance
 ggplot(divanalysis, aes(block, evenness))+
-  geom_boxplot(aes(fill=canopysp))+
-  facet_grid(.~canopysp)+
+  geom_boxplot(aes(fill=treatment))+
+  facet_grid(.~treatment)+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
 
@@ -574,15 +620,15 @@ ggplot(divanalysis, aes(block, evenness))+
 #1) Does abundance of seeds differ between overstory treatments? 
 
 #using all data
-#total_seednum~ block+canopysp, family=gaussian  #by default, an identity link
+#total_seednum~ block+treatment, family=gaussian  #by default, an identity link
 
-evennessmod1<-glm(evenness~block+canopysp, data=divanalysis)
+evennessmod1<-glm(evenness~block+treatment, data=divanalysis)
 summary(evennessmod1)
 anova(evennessmod1) #should not use if unbalanced
 
 evennessmod2 <- glm(evenness~plot, data= divanalysis)
-evennessmod3 <- glm(evenness~canopysp*block, data = divanalysis)
-evennessmod4 <- glm(evenness~canopysp, data = divanalysis)
+evennessmod3 <- glm(evenness~treatment*block, data = divanalysis)
+evennessmod4 <- glm(evenness~treatment, data = divanalysis)
 evennessmod5 <- glm(evenness~block, data = divanalysis)
 evennessmodnull <- glm(evenness~1, data = divanalysis)
 anova(evennessmod4)
@@ -595,7 +641,7 @@ head(model.matrix(abundmod1))
 
 # anova(model) gives Type I sums of squares, which means the reference level is tested first and then other levels, and then interactions. R defaults to treatment contrasts. Can get different results for unbalanced datasets depending on which factor is entered first in the model and thus considered first. 
 
-with(abundanalysis,tapply(total_seednum, list(canopysp, block), mean))
+with(abundanalysis,tapply(total_seednum, list(treatment, block), mean))
 
 ##can use car package to do Type II or III sums of squares
 #Type III can be used with interactions
@@ -604,28 +650,28 @@ Anova(abundmod1, type="III")
 #explore contrasts
 options('contrasts') #shows what contrasts R is using
 #can set contrasts to SAS default. 
-abundmod1a<-glm(total_seednum~block+canopysp, data=, contrasts = list(canopysp = "contr.SAS", block="contr.SAS"))
+abundmod1a<-glm(total_seednum~block+treatment, data=, contrasts = list(treatment = "contr.SAS", block="contr.SAS"))
 summary(abundmod1a)
 
 #Type II
-Anova(glm(total_seednum~block+canopysp, data=abundanalysis), type="II")  #note - type II can't handle interactions
+Anova(glm(total_seednum~block+treatment, data=abundanalysis), type="II")  #note - type II can't handle interactions
 #compare against 
-anova(glm(total_seednum~canopysp+block, data=abundanalysis))
-anova(glm(total_seednum~block+canopysp, data=abundanalysis))
+anova(glm(total_seednum~treatment+block, data=abundanalysis))
+anova(glm(total_seednum~block+treatment, data=abundanalysis))
 
 #lsmeans
-cpyblk<-pairs(lsmeans(abundmod1, ~canopysp | block)) # in lsmeans package
-blkcpy <- pairs(lsmeans(abundmod1, ~block | canopysp))
+cpyblk<-pairs(lsmeans(abundmod1, ~treatment | block)) # in lsmeans package
+blkcpy <- pairs(lsmeans(abundmod1, ~block | treatment))
 rbind(cpyblk, blkcpy)
 
 ####### 2. Classic model selection: Create all sub-models. Use LRT to come up with best model. #####
-abundmod1<-glm(logsum~block+canopysp, data=abundanalysis)
-abundmod2<-glm(total_seednum~canopysp+block, data=abundanalysis)
-abundmod3<-glm(logsum~canopysp, data=abundanalysis)
+abundmod1<-glm(logsum~block+treatment, data=abundanalysis)
+abundmod2<-glm(total_seednum~treatment+block, data=abundanalysis)
+abundmod3<-glm(logsum~treatment, data=abundanalysis)
 abundmod4<-glm(logsum~block, data=abundanalysis)
 abundmod5 <- glm(total_seednum~plot, data=abundanalysis)
 abundmod_null<-glm(total_seednum~1, data=abundanalysis)
-abundmod6 <- glm(logsum~canopysp*block, data=abundanalysis)
+abundmod6 <- glm(logsum~treatment*block, data=abundanalysis)
 
 summary(abundmod5)
 anova(abundmod1, abundmod2, test = "Rao")  #model 1 not sig better than 2
@@ -670,12 +716,12 @@ plot(x = F1,
      cex.lab = 1.5)
 abline(h = 0, lty = 2)
 
-plot(x=abundanalysis$canopysp, y=F1) #heterogeneity in residuals bt canopysp
+plot(x=abundanalysis$treatment, y=F1) #heterogeneity in residuals bt treatment
 plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
 plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
 
 ########### RESIDUALS #################
-evennessmod1<-lm(evenness~block+canopysp, data=divanalysis)
+evennessmod1<-lm(evenness~block+treatment, data=divanalysis)
 summary(evennessmod1)
 anova(evennessmod1, test="F") #should not use if unbalanced
 
@@ -686,9 +732,10 @@ plot(evennessmod1)
 even.res <- resid(evennessmod1)
 even.pred <- predict(evennessmod1)
 plot(even.pred, even.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
+abline(0,0)
 
 #get residuals and plot residuals vs predicted values
-even.glm = glm(evenness ~ block+canopysp, data=divanalysis) 
+even.glm = glm(evenness ~ block+treatment, data=divanalysis) 
 even.res = resid(even.glm) 
 
 plot(divanalysis$evenness, even.res, ylab="Residuals", xlab="Seed Species evenness", main="evenness pred by resid") 
@@ -698,3 +745,9 @@ abline(0, 0)
 hist(even.res)
 
 #This histogram has a normal distribution
+
+#qqplot for normality
+qqnorm(divanalysis$evenness)
+qqline(divanalysis$evenness, col = 'red')
+
+#lsmeans(evennessmod1, "treatment", contr= "pairwise")
