@@ -5,18 +5,25 @@
 #####Abundance Analysis#####
 
 #Libraries
-library(dplyr); library(plyr); library(stats); library(lme4); library(readr); library(ggplot2)
+library(dplyr); library(plyr); library(stats); library(lme4); library(readr); library(ggplot2); library(lsmeans)
 
 #Bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
 meshabund <- read.csv("Mesh_abund_analysis.csv")
 
+str(meshabund)
+meshabund$trap <- as.factor(meshabund$trap)
+meshabund$block <- as.factor(meshabund$block)
+str(meshabund)
 
-ggplot(meshabund, aes(block, seednum, color=meshtype))+
+ggplot(meshabund, aes(block, seednum, color =meshtype))+
   geom_boxplot()+
   facet_grid(.~canopysp)+
   ggtitle("Treatment abundance by mesh type")
+
+hist(meshabund$seednum)
+boxplot(meshabund$seednum~ meshabund$meshtype, xlab="Meshtype", ylab="seednum", main= "Seed abundance per treatment")
 
 #plot residuals
 mabundanalysis <- glmer(seednum~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block)+ (1|trap), family= "poisson", data = meshabund)
@@ -31,15 +38,45 @@ mesh_abund.pred <- predict(mabundanalysis)
 plot(mesh_abund.pred, mesh_abun.res)
 abline(0,0)
 
+qqnorm(meshabund$seednum)
+qqline(meshabund$seednum, col = 'red')
+
+hist(mesh_abun.res)
+
 anova(mabundanalysis)
 summary(mabundanalysis)
 
 lsmeans(mabundanalysis, "canopysp", contr = "pairwise")
-#no significance found
-lsmeans(mabundanalysis, "meshtype", contr = "pairwise")
-#significance found
 
+#ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
+
+#contrast for hial-pema (0.746)
+ptukey((0.746*sqrt(2)), nmeans= 4, df=8, lower = F)
+#=0.876
+
+#contrast for hial-viko (-0.284)
+ptukey(-0.284*sqrt(2), nmeans= 4, df=8, lower = F)
+#=1
+
+#contrast for hial-vogu (2.247)
+ptukey(1.855*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.3174
+
+#contrast for viko-pema (-1.031)
+ptukey(-1.031*sqrt(2), nmeans= 4, df=8, lower = F)
+#=1
+
+#contrast for vogu-pema (1.179)
+ptukey(1.179*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.655
+
+#contrast for viko-vogu (2.113)
+ptukey(2.113*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.228
+
+###############################
 #######Diversity Analysis######
+###############################
 #load library
 library(vegan); library(base); library (stats); library(lme4)
 # bring in data
@@ -65,6 +102,11 @@ mesh_rich.pred <- predict(mrichanalysis)
 plot(mesh_rich.pred, mesh_rich.res, ylab="Residuals", xlab="Seed Species Richness", main="Mesh Richness Residuals") 
 abline(0, 0) 
 
+hist(mesh_rich.pred)
+
+qqnorm(mesh_diversity$richness)
+qqline(mesh_diversity$richness, col = 'red')
+
 summary(mrichanalysis)
 anova(mrichanalysis)
 
@@ -72,8 +114,14 @@ anova(mrichanalysis)
 plot(mrichanalysis)
 
 lsmeans(mrichanalysis, "meshtype", contr= "pairwise")
-#This is significant
+#contrast for small to regular mesh (-15.98)
+ptukey((-15.98*sqrt(2)), nmeans= 4, df=8, lower = F)
+#=1
 
+lsmeans(mrichanalysis, "canopysp", contr= "pairwise")
+#contrast for small to regular mesh (-15.98)
+ptukey((-15.98*sqrt(2)), nmeans= 4, df=8, lower = F)
+#=1
 
 #2) Diversity
 
@@ -94,8 +142,15 @@ meshdiv.res = resid(mesh_divanalysis)
 meshdiv.pred <- predict(mesh_divanalysis)
 
 plot(meshdiv.pred, meshdiv.res)
-plot(mesh_diversity$diversity, meshdiv.res, ylab="Residuals", xlab="Seed Species Diversity", main="Mesh Diversity Residuals") 
+#plot(mesh_diversity$diversity, meshdiv.res, ylab="Residuals", xlab="Seed Species Diversity", main="Mesh Diversity Residuals") 
 abline(0, 0) 
+
+
+hist(meshdiv.pred)
+
+qqnorm(mesh_diversity$diversity)
+qqline(mesh_diversity$diversity, col = 'red')
+
 
 #OR
 plot(mesh_divanalysis)
@@ -109,6 +164,10 @@ summary(mesh_divanalysis)
 
 lsmeans(mesh_divanalysis, "meshtype", contr= "pairwise")
 #this is significant
+
+#contrast for small to regular mesh (-5.661)
+ptukey((-5.661*sqrt(2)), nmeans= 4, df=8, lower = F)
+#=1
 
 #3) Evenness
 
