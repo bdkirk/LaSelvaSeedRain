@@ -38,7 +38,7 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
 
 # Using Bray-Curtis dissimilarity index
 #Get data
-compdata <- read.csv("comp_sub_nocpy.csv")
+compdata <- read.csv("comp_sub_notrtsp.csv")
 
 ncol(compdata)
 str(compdata[,1:10])
