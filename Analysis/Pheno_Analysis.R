@@ -31,6 +31,7 @@ pheno$month <- as.Date(cut(pheno$date, breaks = "month"))
 #create a monthly seed species, plot total
 month_plot <- ddply(pheno, .(plot, species, month), summarise, seednum=sum(total_seednum))
 
+
 #create a monthly seed species, treatment total
 month_treatment <- ddply(pheno, .(canopysp, species, month), summarise, seednum=sum(total_seednum))
 
@@ -43,7 +44,7 @@ month_block <- ddply(pheno, .(block, canopysp, species, month), summarise, seedn
 #1)miconia affinis
 miaf <- filter(month_plot, species == "miconia affinis")
 
-ggplot(data = miaf, aes(month, seednum, color = plot)) +
+ggplot(data = miaf, aes(month, seednum, fill = plot)) +
   stat_summary(fun.y = sum, # adds up all observations for the month
                geom = "bar")+ # or "line"
   scale_x_date(date_breaks = "1 month", labels=date_format ("%b-%Y")) # custom x-axis labels
@@ -60,7 +61,7 @@ topspecies <- c("miconia affinis", "piper colonense", "miconia multispicata", "a
                
 topten <- filter(month_plot, species %in% topspecies)
 
-ggplot(data = topten, aes(month, seednum, color = species)) +
+ggplot(data = topten, aes(month, seednum, fill = species)) +
   stat_summary(fun.y = sum, # adds up all observations for the month
                geom = "bar")+ # or "line"
   scale_x_date(date_breaks = "1 month", labels=date_format ("%b-%Y")) # custom x-axis labels
@@ -75,3 +76,20 @@ ggplot(data = topten, aes(month, seednum)) +
 ggplot(data = topten, aes(month, seednum), fill= species) +
   facet_grid(species~plot, scales = "free_y")+
   geom_bar(position = "dodge")
+
+#plot top ten species over 14 months of experiment across four treatments
+
+topten_trt <- filter(month_treatment, species %in% topspecies)
+
+ggplot(data = topten_trt, aes(month, seednum, fill = species)) +
+  stat_summary(fun.y = sum, # adds up all observations for the month
+               geom = "bar")+ # or "line"
+  scale_x_date(date_breaks = "1 month", labels=date_format ("%b-%Y"))+ # custom x-axis labels
+  facet_grid(canopysp~., scales ="free_y")
+
+#plot top ten species
+ggplot(data = topten_trt, aes(month, seednum, fill = species)) +
+  stat_summary(fun.y = sum, # adds up all observations for the month
+               geom = "bar")+ # or "line"
+  scale_x_date(date_breaks = "1 month", labels=date_format ("%m"))+ # custom x-axis labels
+  facet_grid(canopysp~species)
