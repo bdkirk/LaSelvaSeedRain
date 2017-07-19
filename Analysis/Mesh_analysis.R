@@ -251,12 +251,18 @@ mesh_seedcomp <- mesh_compdata[,2:124]
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
 mesh_seedcomp.bc <- vegdist(mesh_seedcomp)
 # PERMANOVA (Anderson et al. 2001)
-procD.lm(mesh_seedcomp.bc ~ canopysp+block+meshtype, data = mesh_compdata) 
-procD.lm(mesh_seedcomp.bc ~ canopysp+block+trap+meshtype, data = mesh_compdata)
+#procD.lm(mesh_seedcomp.bc ~ canopysp+block+meshtype, data = mesh_compdata) #not the correct version
+procD.lm(mesh_seedcomp.bc ~ plot+meshtype, data = mesh_compdata) #do they differ btw mesh types
 
+procD.lm(mesh_seedcomp.bc ~ plot+meshtype+meshtype:block+meshtype:canopysp, data = mesh_compdata) #do they differ between the species/trt, accounting for block and canopysp with regards to meshtype
+
+#procD.lm(mesh_seedcomp.bc ~ block*canopysp+meshtype+meshtype:block+meshtype:canopysp, data = mesh_compdata)
 
 #This does a pair-wise comparison of the data
-advanced.procD.lm(mesh_seedcomp.bc ~ canopysp, ~ 1, ~ canopysp, data = mesh_compdata) # Four overstory treatments compared with one another
+advanced.procD.lm(mesh_seedcomp.bc ~ block*canopysp +meshtype + meshtype:block +meshtype:canopysp, 
+    ~ block*canopysp + meshtype +meshtype:block, 
+    ~ meshtype:canopysp, data = mesh_compdata) # Four overstory treatments compared with one another to see if there are differences between regular and fine mesh at the treatment level.  Look in the p-values section and constrast meshsmall.TRT to meshreg.TRT.
+
 #NMDS
 mesh_seedcomp.mds <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 2, try = 100)
 mesh_seedcomp.mds$stress
