@@ -46,16 +46,21 @@ compdata$block <- as.factor(compdata$block)
 
 #get only the species data from the compdata file
 seed_comp <- compdata[,4:126]
+
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
-seedcomp.bc <- vegdist(seed_comp)
+seedcomp.bc <- vegdist(seed_comp, method = "bray", binary = FALSE)
+seedcomp.bc
+
 # PERMANOVA (Anderson et al. 2001)
-procD.lm(seedcomp.bc ~ treatment+block, data = compdata) # significant interaction found and significant difference between blocks
+#procD.lm(seedcomp.bc ~ treatment+block, data = compdata) # this is not correct bc the type I and type III do not match correctly to compare with teh treatment.
+procD.lm(seedcomp.bc ~ block+treatment, data = compdata) # correct one
+
 #Dr. Dixon recommended using the + or additive to account for the interaction
 
 #This does a pair-wise comparison of the data
-advanced.procD.lm(seedcomp.bc ~ treatment, ~ 1, ~ treatment, data = compdata) # Four overstory treatments compared with one another, no significant difference
-advanced.procD.lm(seedcomp.bc ~ treatment*block , ~1, ~ treatment, data = compdata) #treatment plus block combo was significantly different
-advanced.procD.lm(seedcomp.bc ~ treatment + plot, ~ treatment, ~ plot, data = compdata)
+advanced.procD.lm(seedcomp.bc ~ treatment, ~ 1, ~ treatment, data = compdata) # this is a null hypothesis but it doesn't account for random error variation from blocks.
+advanced.procD.lm(seedcomp.bc ~ block+ treatment , ~block, ~ treatment, data = compdata) #correct one; this one correctly looks at differences amongst the treatments when comparing the blocks
+
 
 #NMDS
 seedcomp.mds <- metaMDS(seed_comp, autotransform = F, expand = F, k = 2, try = 50)
