@@ -267,7 +267,7 @@ advanced.procD.lm(mesh_seedcomp.bc ~ block*canopysp +meshtype + meshtype:block +
 mesh_seedcomp.mds <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 2, try = 100)
 mesh_seedcomp.mds$stress
 #Ordination
-nmsplot(mesh_seedcomp.mds, mesh_compdata$canopysp, "Hial", "Vogu", "Pema", "Viko",
-        "bottomleft", c("HIAL", "VOGU", "PEMA", "VIKO"))
+nmsplot(mesh_seedcomp.mds, mesh_compdata$canopysp, "Hial", "Pema", "Viko", "Vogu",
+        "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
 #I am not sure what this does.
 stressplot(mesh_seedcomp.mds)
