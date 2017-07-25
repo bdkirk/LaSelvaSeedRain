@@ -63,12 +63,12 @@ advanced.procD.lm(seedcomp.bc ~ block+ treatment , ~block, ~ treatment, data = c
 
 
 #NMDS
-seedcomp.mds <- metaMDS(seed_comp, autotransform = F, expand = F, k = 2, try = 50)
+seedcomp.mds <- metaMDS(seed_comp, autotransform = F, expand = F, k = 2, try = 100)
 seedcomp.mds$stress
 #Ordination
-nmsplot(seedcomp.mds, compdata$treatment, "Hial", "Vogu", "Pema", "Viko",
-        "bottomleft", c("HIAL", "VOGU", "PEMA", "VIKO"))
-##For some reason points are not displaying.
+nmsplot(seedcomp.mds, compdata$treatment, "hial", "pema", "viko", "vogu",
+        "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
+##These need to be in the order they are in the file.
 
 #I am not sure what this does.
 stressplot(seedcomp.mds)
@@ -95,10 +95,11 @@ NMDS.scree<-function(data_matrix, reps=3, max_factors=2) {
 }
 
 NMDS.scree(seed_comp, reps=3, max_factors=7)
-#Based on this, you might use four factors?
-seedcomp.mds2 <- metaMDS(seed_comp, autotransform = F, expand = F, k = 4, try = 100)
+#Based on this, you might use three dimensions rather than 2 dimensions
+seedcomp.mds2 <- metaMDS(seed_comp, autotransform = F, expand = F, k = 3, try = 100)
 stressplot(seedcomp.mds2)
-nmsplot(seedcomp.mds2, compdata$treatment, "Hial", "Vogu", "Pema", "Viko",
-        "bottomleft", c("HIAL", "VOGU", "PEMA", "VIKO"))
+nmsplot(seedcomp.mds2, compdata$treatment, "hial", "pema", "viko", "vogu",
+        "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
 
 ### Ran on 21 May and did not find significant difference between the treatments ###
+#Reran on 19 Jul after talkin with Dr. Dixon and we found that 2 dimensions was sufficient and that there are significant differences between vogu and pema.
