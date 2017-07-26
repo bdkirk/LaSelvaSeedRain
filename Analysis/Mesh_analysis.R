@@ -82,6 +82,11 @@ library(vegan); library(base); library (stats); library(lme4)
 # bring in data
 mesh_diversity <- read.csv("mesh_div_analysis.csv")
 
+str(mesh_diversity)
+mesh_diversity$block <- as.factor(mesh_diversity$block)
+mesh_diversity$trap <- as.factor(mesh_diversity$trap)
+str(mesh_diversity)
+
 #1) Richness
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
@@ -95,7 +100,7 @@ ggplot(mesh_diversity, aes(block, richness, color=meshtype))+
 
 ##Residuals##
 
-mrichanalysis <- glmer(richness~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity, family=poisson) #model fails to converge when you add in the individual observation of trap as a random effect.  Should trap be a fixed effect?  How can this be incorportated?
+mrichanalysis <- glmer(richness~ canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity, family=poisson) #model fails to converge when you add in the individual observation of trap as a random effect.
 
 mesh_rich.res <-  resid(mrichanalysis) 
 mesh_rich.pred <- predict(mrichanalysis)
@@ -115,13 +120,13 @@ plot(mrichanalysis)
 
 lsmeans(mrichanalysis, "meshtype", contr= "pairwise")
 #contrast for small to regular mesh (-15.98)
-ptukey((-15.98*sqrt(2)), nmeans= 4, df=8, lower = F)
+ptukey(((-15.98)*sqrt(2)), nmeans= 2, df=1, lower = F)
 #=1
 
 lsmeans(mrichanalysis, "canopysp", contr= "pairwise")
-#contrast for small to regular mesh (-15.98)
-ptukey((-15.98*sqrt(2)), nmeans= 4, df=8, lower = F)
-#=1
+#contrast to compare between treatmetns
+ptukey((2.911*sqrt(2)), nmeans= 4, df=3, lower = F)
+#=0.17164
 
 #2) Diversity
 
@@ -138,7 +143,7 @@ ggplot(mesh_diversity, aes(block, diversity, color=meshtype))+
 ##Residuals##
 
 mesh_divanalysis <- lmer(diversity~canopysp+block+meshtype+meshtype:canopysp+(1|canopysp:block), data = mesh_diversity)
-meshdiv.res = resid(mesh_divanalysis) 
+meshdiv.res <-  resid(mesh_divanalysis) 
 meshdiv.pred <- predict(mesh_divanalysis)
 
 plot(meshdiv.pred, meshdiv.res)
@@ -168,6 +173,7 @@ lsmeans(mesh_divanalysis, "meshtype", contr= "pairwise")
 #contrast for small to regular mesh (-5.661)
 ptukey((-5.661*sqrt(2)), nmeans= 4, df=8, lower = F)
 #=1
+
 
 #3) Evenness
 
