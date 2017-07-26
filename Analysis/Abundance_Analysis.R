@@ -30,7 +30,7 @@ abund$ï..Plot <- NULL
 #Plotting to look at how the data relates
 plot(abund$total_seednum, abund$Slope)
 plot(abund$total_seednum, abund$Aspect)
-plot(abund$total_seednum, abund$Dist)
+plot(abund$Dist, abund$total_seednum)
 #plot will vary directly with these covariates
 
 
