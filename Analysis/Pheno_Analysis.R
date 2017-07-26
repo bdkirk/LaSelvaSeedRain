@@ -80,12 +80,13 @@ ggplot(data = topten, aes(month, seednum), fill= species) +
 #plot top ten species over 14 months of experiment across four treatments
 
 topten_trt <- filter(month_treatment, species %in% topspecies)
-
+###****Need to figure out how to adjust X axis limt to exclude beginning and end dates
 ggplot(data = topten_trt, aes(month, seednum, fill = species)) +
   stat_summary(fun.y = sum, # adds up all observations for the month
                geom = "bar")+ # or "line"
-  scale_x_date(date_breaks = "1 month", labels=date_format ("%b-%Y"))+ # custom x-axis labels
-  facet_grid(canopysp~., scales ="free_y")
+  scale_x_date(date_breaks = "1 month", labels=date_format ("%b-%Y"), limits = as.Date(c(NA, NA)))+ # custom x-axis labels
+  facet_grid(canopysp~., scales ="free_y")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 #plot top ten species
 ggplot(data = topten_trt, aes(month, seednum, fill = species)) +
