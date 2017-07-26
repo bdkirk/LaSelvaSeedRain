@@ -258,7 +258,7 @@ ptukey(-3.163*sqrt(2), nmeans= 4, df=8, lower = F)
 #=1
 
 #contrast for vogu-pema (-3.266)
-ptukey(-3.266*sqrt(2), nmeans= 4, df=8, lower = F)
+ptukey((-3.266)*sqrt(2), nmeans= 4, df=8, lower = F)
 #= 1
 
 #contrast for viko-vogu (-0.372)
