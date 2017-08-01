@@ -11,7 +11,7 @@ library(readr); library(plyr); library(ggplot2); library(reshape2)
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
 #naming datafile seedrain from excel file
-abundance <- read.csv("yearsub_no_cpysp.csv")
+abundance <- read.csv("yearsub_no_trtsp.csv")
 
 #This sums up the plots according to species for abundance calculations
 seedrain_plot <- ddply(abundance, .(plot, species), summarise, seednum=sum(total_seednum))
@@ -19,9 +19,9 @@ seedrain_plot <- ddply(abundance, .(plot, species), summarise, seednum=sum(total
 str(abundance)
 abund <- ddply(abundance, .(plot), summarise, total_seednum=sum(total_seednum))
 
-write.csv (abund, "abund_sub_nocpy.csv", row.names = FALSE)
+write.csv (abund, "abund_sub_notrtsp.csv", row.names = FALSE)
 
 #Need to do the following:
-#added in columns in excel for predictor variables of canopysp (treatment) and block
+#added in columns in excel for predictor variables of treatment and block
 
 # finished on 15 May 2017
