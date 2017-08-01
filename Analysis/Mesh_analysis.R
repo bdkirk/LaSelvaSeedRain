@@ -229,16 +229,16 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
   plot(mod, display = 'sites', choice = c(1, 2), type = 'none')
   
   # Add points for each group with a different color per group
-  points(mod$points[groupcol == g1, 1], mod$points[groupcol == g1, 2], pch = 22, bg = "#006600")
+  points(mod$points[groupcol == g1, 1], mod$points[groupcol == g1, 2], pch = 21, bg = "#006600")
   points(mod$points[groupcol == g2, 1], mod$points[groupcol == g2, 2], pch = 22, bg = "#FF6600")
-  points(mod$points[groupcol == g3, 1], mod$points[groupcol == g3, 2], pch = 22, bg = "#990066")
-  points(mod$points[groupcol == g4, 1], mod$points[groupcol == g4, 2], pch = 22, bg = "#0066CC")
+  points(mod$points[groupcol == g3, 1], mod$points[groupcol == g3, 2], pch = 23, bg = "#990066")
+  points(mod$points[groupcol == g4, 1], mod$points[groupcol == g4, 2], pch = 24, bg = "#0066CC")
   
   # Ordinate SD ellipses around the centroid
   ordiellipse(mod, groupcol, col = c("#006600", "#FF6600", "#990066", "#0066CC"), display = "sites", kind = "sd", label = F)
   
   # Add legend
-  legend(legpos, legend = legcont, fill = c("#006600", "#FF6600", "#990066", "#0066CC"), cex = 0.75)
+  legend(legpos, legend = legcont, pch = c(21, 22, 23, 24), pt.bg = c("#006600", "#FF6600", "#990066", "#0066CC"), cex = 0.75)
   
 }
 
@@ -249,7 +249,6 @@ mesh_compdata <- read.csv("mesh_comp_analysis.csv")
 ncol(mesh_compdata)
 str(mesh_compdata[,123:128])
 mesh_compdata$block <-as.factor(mesh_compdata$block)
-###need to add in block in the wrangling data
 mesh_compdata$trap <- as.factor(mesh_compdata$trap)
 str(mesh_compdata)
 
