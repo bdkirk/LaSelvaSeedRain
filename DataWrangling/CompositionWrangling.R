@@ -10,7 +10,7 @@ library(readr); library(plyr); library(ggplot2); library(reshape2); library(base
 setwd("Data/TidyData")
 
 #This is file with the years worth of data that has been subsetted and no canopy species were included in seedrain
-seedcomp<- read.csv("yearsub_no_cpysp.csv")
+seedcomp<- read.csv("yearsub_no_trtsp.csv")
 
 #summarise the data by plot
 plotsum <- ddply(seedcomp, .(plot, species), summarise, seednum=sum(total_seednum))
@@ -27,7 +27,7 @@ species_comp <- species_comp[, -which(names(species_comp)=="NA")]
 species_comp[is.na(species_comp)] <- 0
 
 #create csv file that can be used to do NMDS calculations
-write.csv(species_comp, "comp_sub_nocpy.csv", row.names = FALSE)
+write.csv(species_comp, "comp_sub_notrtsp.csv", row.names = FALSE)
 
 # need to manually add in block and canopysp columns in excel
 
