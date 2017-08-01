@@ -240,6 +240,7 @@ lsmeans(richnessmod1, "treatment", contr= "pairwise")
 #These p-values are not t-based p-values that account for df but you can get those by using the code below:
 
 #ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
+#IMPORTANT: need to use abs(zscore) for negative values.
 
 #contrast for hial-pema (3.465)
 ptukey((3.465*sqrt(2)), nmeans= 4, df=8, lower = F)
@@ -250,20 +251,20 @@ ptukey(0.311*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.9888
 
 #contrast for hial-vogu (-0.092)
-ptukey(-0.092*sqrt(2), nmeans= 4, df=8, lower = F)
-#=1
+ptukey(abs(-0.092)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.999
 
 #contrast for viko-pema (-3.163)
-ptukey(-3.163*sqrt(2), nmeans= 4, df=8, lower = F)
-#=1
+ptukey(abs(-3.163)*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.0528
 
 #contrast for vogu-pema (-3.266)
-ptukey((-3.266)*sqrt(2), nmeans= 4, df=8, lower = F)
-#= 1
+ptukey(abs(-3.266)*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.0457
 
 #contrast for viko-vogu (-0.372)
-ptukey(-0.372*sqrt(2), nmeans= 4, df=8, lower = F)
-#=1
+ptukey(abs(-0.372)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.981
 
 
 
