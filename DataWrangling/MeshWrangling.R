@@ -11,7 +11,7 @@ library(dplyr); library(plyr); library(vegan)
 #Set wd
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 #bring in datafile
-mesh_abund <- read.csv("yearsub_no_cpysp.csv")
+mesh_abund <- read.csv("yearsub_no_trtsp.csv")
 
 #summarise to the trap level
 sum_trap <- ddply(mesh_abund, .(trap), summarise, seednum=sum(total_seednum))
@@ -37,7 +37,7 @@ library(readxl); library(plyr); library(ggplot2); library(reshape2); library(bas
 setwd("Data/TidyData")
 
 #bring in data
-meshdiv <- read.csv("yearsub_no_cpysp.csv")
+meshdiv <- read.csv("yearsub_no_trtsp.csv")
 
 #summarise by plot
 trapsum <- ddply(meshdiv, .(trap, species), summarise, seednum=sum(total_seednum))
@@ -68,10 +68,10 @@ y$diversity <- diversity(y, index = "shannon")
 y$evenness <- (y$diversity/(log(y$richness)))
 
 #change diversity to something more recognizable
-y$diversity <- exp(diversity(y, index = "shannon"))
+y$divnorm <- exp(diversity(y, index = "shannon"))
 
 #bind x and y back together
-meshdiv_data2 <- cbind(x, y[,124:126])
+meshdiv_data2 <- cbind(x, y[,124:127])
 tail(meshdiv_data2)
 
 #assigning canopy species, block and meshtype to a particular trap number
@@ -92,7 +92,7 @@ write.csv(meshdiv_data3, "mesh_div_analysis.csv", row.names = FALSE)
 
 ######### Composition ########
 #bring in data
-meshcomp <- read.csv("yearsub_no_cpysp.csv")
+meshcomp <- read.csv("yearsub_no_trtsp.csv")
 
 #summarise by plot
 trapsum <- ddply(meshcomp, .(trap, species), summarise, seednum=sum(total_seednum))
