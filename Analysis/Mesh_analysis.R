@@ -55,16 +55,16 @@ ptukey((0.746*sqrt(2)), nmeans= 4, df=8, lower = F)
 #=0.876
 
 #contrast for hial-viko (-0.284)
-ptukey(-0.284*sqrt(2), nmeans= 4, df=8, lower = F)
-#=1
+ptukey(abs(-0.284)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.991
 
 #contrast for hial-vogu (2.247)
 ptukey(1.855*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.3174
 
 #contrast for viko-pema (-1.031)
-ptukey(-1.031*sqrt(2), nmeans= 4, df=8, lower = F)
-#=1
+ptukey(abs(-1.031)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.737
 
 #contrast for vogu-pema (1.179)
 ptukey(1.179*sqrt(2), nmeans= 4, df=8, lower = F)
@@ -91,7 +91,7 @@ str(mesh_diversity)
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
 hist(mesh_diversity$richness)
-boxplot(mesh_diversity$richness~ mesh_diversity$canopysp, main= "Seed species richness per treatment", xlab="canopysp", ylab="species richness")
+boxplot(mesh_diversity$richness~ mesh_diversity$canopysp, main= "Seed species richness per treatment", xlab="Planted Tree Species", ylab="Species Richness")
 
 ggplot(mesh_diversity, aes(block, richness, color=meshtype))+
   geom_boxplot()+
@@ -118,14 +118,11 @@ anova(mrichanalysis)
 #OR
 plot(mrichanalysis)
 
-lsmeans(mrichanalysis, "meshtype", contr= "pairwise")
-#contrast for small to regular mesh (-15.98)
-ptukey(((-15.98)*sqrt(2)), nmeans= 2, df=1, lower = F)
-#=1
+#Not appropriate to do a tukey comparison for mesh type because only two.
 
 lsmeans(mrichanalysis, "canopysp", contr= "pairwise")
 #contrast to compare between treatmetns
-ptukey((2.911*sqrt(2)), nmeans= 4, df=3, lower = F)
+ptukey(3.214*sqrt(2), nmeans= 4, df=3, lower = F)
 #=0.17164
 
 #2) Diversity
@@ -169,11 +166,6 @@ summary(mesh_divanalysis)
 
 lsmeans(mesh_divanalysis, "meshtype", contr= "pairwise")
 #this is significant
-
-#contrast for small to regular mesh (-5.661)
-ptukey((-5.661*sqrt(2)), nmeans= 4, df=8, lower = F)
-#=1
-
 
 #3) Evenness
 
