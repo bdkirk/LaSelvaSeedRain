@@ -70,7 +70,7 @@ ggplot(data = month_seed, aes(month, seednum)) +
 
 #######Testing to see what it might look like averaged across treatments#########
 #summarise the data by treatment
-trtsum <- ddply(pheno, .(canopysp, species), summarise, seednum=sum(total_seednum))
+trtsum <- ddply(pheno, .(treatment, species), summarise, seednum=sum(total_seednum))
 
 ####CREATING WIDE DATA##########################################################
 #Create species columns to have data in wide format
@@ -84,7 +84,7 @@ pheno_data <- pheno_data[, -which(names(pheno_data)=="NA")]
 pheno_data[is.na(pheno_data)] <- 0
 
 #create a tidy csv file for rank abundance of individual species
-write.csv(pheno_data, "pheno_ovsty_tidy.csv", row.names = FALSE)
+write.csv(pheno_data, "pheno_trt_tidy.csv", row.names = FALSE)
 
 ## Testing to see if data is in the correct format for analysis...thus far it is not.
 #do a rank abundance plot to see which seeds have the most
@@ -105,10 +105,10 @@ rankabuncomp(x,y="",factor,scale="abundance",scaledx=F,type="o",rainbow=T,
 trtgrp <- pheno
 
 #create a monthly seed species, plot total
-trt_month_seed <- ddply(pheno, .(canopysp, species, month), summarise, seednum=sum(total_seednum))
+trt_month_seed <- ddply(pheno, .(treatment, species, month), summarise, seednum=sum(total_seednum))
 
 #Code on website: plots month totals across the three months that were compared.
-ggplot(data = trt_month_seed, aes(month, seednum, color = canopysp)) +
+ggplot(data = trt_month_seed, aes(month, seednum, color = treatment)) +
   stat_summary(fun.y = sum, # adds up all observations for the month
                geom = "bar")+ # or "line"
   scale_x_date(date_breaks = "1 month", labels=date_format ("%b-%Y")) # custom x-axis labels
@@ -117,4 +117,4 @@ ggplot(data = trt_month_seed, aes(month, seednum, color = canopysp)) +
 ggplot(data = trt_month_seed, aes(month, seednum)) +
   stat_summary(fun.y = sum, # adds up all observations for the month
                geom = "line")+ # or "line"
-  facet_wrap(~canopysp, scales = "free_y")
+  facet_wrap(~treatment, scales = "free_y")
