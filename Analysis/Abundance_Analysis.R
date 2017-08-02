@@ -30,7 +30,7 @@ abund$ï..Plot <- NULL
 #Plotting to look at how the data relates
 plot(abund$total_seednum, abund$Slope)
 plot(abund$total_seednum, abund$Aspect)
-plot(abund$Dist, abund$total_seednum)
+plot(abund$total_seednum, abund$Dist)
 #plot will vary directly with these covariates
 
 
@@ -318,12 +318,12 @@ lsmeans(abund.glm, "canopysp", contr= "pairwise")
 #ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
 
 #contrast for hial-pema (-0.343)
-ptukey((-0.343*sqrt(2)), nmeans= 4, df=8, lower = F)
-#=1
+ptukey(abs(-0.343)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.985
 
 #contrast for hial-viko (-0.163)
-ptukey(-0.163*sqrt(2), nmeans= 4, df=8, lower = F)
-#=1
+ptukey(abs(-0.163)*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.998
 
 #contrast for hial-vogu (2.247)
 ptukey(2.247*sqrt(2), nmeans= 4, df=8, lower = F)
