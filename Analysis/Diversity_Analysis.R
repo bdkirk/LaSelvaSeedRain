@@ -19,8 +19,13 @@ divanalysis$block <- as.factor(divanalysis$block)
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
 hist(divanalysis$richness)
-boxplot(divanalysis$richness~ divanalysis$treatment, main= "Seed species richness per treatment", xlab="treatment", ylab="species richness")
+boxplot(divanalysis$richness~ divanalysis$treatment, main= "Seed species richness per treatment", xlab="Treatment", ylab="Species richness")
 
+#created dotplot as suggested by Dr. Dixon on 8 Aug meeting.
+ggplot(divanalysis, aes(treatment, richness))+
+  geom_dotplot(binaxis = "y", method="histodot", binwidth = 1)+
+  xlab("Planted Tree Species")+
+  ylab("Species Richness")
 #pema appears to have the lowest species richness
 
 ##b.	Examine Zero inflation Y
@@ -281,6 +286,13 @@ boxplot(divanalysis$diversity~ divanalysis$treatment, main= "Species Diversity p
 
 #vogu and hial have greatest diversity 
 
+
+#created dotplot as suggested by Dr. Dixon on 8 Aug meeting. Better to use dots when so few observations.
+ggplot(divanalysis, aes(treatment, diversity))+
+  geom_dotplot(binaxis = "y", method="histodot", binwidth = .1)+
+  xlab("Planted Tree Species")+
+  ylab("Species Diversity")
+
 ##b.	Examine Zero inflation Y
 #Not applicable for species richness because there are no zeros when summed to the plot level and response is continuous (>0)
 
@@ -530,6 +542,12 @@ boxplot(divanalysis$evenness~ divanalysis$treatment, main= "Species evenness per
 #More of a normal distribution in histogram
 #pema and hial have largest amounts of variability
 
+
+#created dotplot as suggested by Dr. Dixon on 8 Aug meeting. Better to use dots when so few observations.
+ggplot(divanalysis, aes(treatment, evenness))+
+  geom_dotplot(binaxis = "y", method="histodot", binwidth = .025)+
+  xlab("Planted Tree Species")+
+  ylab("Species Evenness")
 ##b.	Examine Zero inflation Y
 #Not applicable for species evenness because there are no zeros when summed to the plot level and response is continuous (>0)
 
@@ -751,4 +769,4 @@ hist(even.res)
 qqnorm(divanalysis$evenness)
 qqline(divanalysis$evenness, col = 'red')
 
-#lsmeans(evennessmod1, "treatment", contr= "pairwise")
+lsmeans(evennessmod1, "treatment", contr= "pairwise")
