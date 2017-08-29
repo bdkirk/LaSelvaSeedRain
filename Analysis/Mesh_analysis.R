@@ -43,11 +43,14 @@ qqline(meshabund$seednum, col = 'red')
 
 hist(mesh_abun.res)
 
-anova(mabundanalysis)
+anova(mabundanalysis, test = "F")
 summary(mabundanalysis)
 
-lsmeans(mabundanalysis, "canopysp", contr = "pairwise")
+lsmeans(mabundanalysis, "meshtype", contr = "pairwise")
 
+#pf(q=f statistic, df1= treatment df, df2= error df, lower.tail = false if testing against a null hypothesis)
+pf(q=11.369, df1=1, df2 = 5, lower.tail = FALSE)
+# p-value is 0.019
 #ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
 
 #contrast for hial-pema (0.746)
@@ -268,3 +271,47 @@ nmsplot(mesh_seedcomp.mds, mesh_compdata$canopysp, "Hial", "Pema", "Viko", "Vogu
         "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
 #I am not sure what this does.
 stressplot(mesh_seedcomp.mds)
+
+# The below code was added on 29 Aug after meeting with Katie Rey, stat help.  She helped modify the code but the small and regular mesh sizes do not show in the legend.  Need to work on this.
+
+
+#modifying composition code
+##  ---------------------------------------------------
+# Function for Plotting NMS results (Nick Lyon's code)
+##  ---------------------------------------------------
+
+# Function that plots NMS points with different colors for groups (only works for 4 groups)
+## mod = object returned by metaMDS
+## groupcol = group column (duh)
+## g1 - 4 = grouping variables as written in dataframe
+## legpos = legend position, either numeric vector of x/y coords or shorthand accepted by "legend" function
+## legcont = legend content, vector of labels for legend
+
+nmsplot_new <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont, ellipse_option, ellipse_legend, ellipse_labels) {
+  # Create plot
+  plot(mod, display = 'sites', choice = c(1, 2), type = 'none')
+  
+  # Add points for each group with a different color per group
+  points(mod$points[groupcol == g1, 1], mod$points[groupcol == g1, 2], pch = 21, bg = "#006600")
+  points(mod$points[groupcol == g2, 1], mod$points[groupcol == g2, 2], pch = 22, bg = "#FF6600")
+  points(mod$points[groupcol == g3, 1], mod$points[groupcol == g3, 2], pch = 23, bg = "#990066")
+  points(mod$points[groupcol == g4, 1], mod$points[groupcol == g4, 2], pch = 24, bg = "#0066CC")
+  
+  # Ordinate SD ellipses around the centroid
+  ordiellipse(mod, ellipse_option, col = c("#006600", "#FF6600"), display = "sites", kind = "sd", label = F)
+  
+  # Add legend
+  legend(legpos, legend = legcont, pch = c(21, 22, 23, 24), pt.bg = c("#006600", "#FF6600", "#990066", "#0066CC"), cex = 0.75)
+  
+  legend(ellipse_legend, legend = ellipse_labels, col = c("#006600", "#FF6600"), cex = 0.75)
+  
+}
+
+
+nmsplot_new(mesh_seedcomp.mds, mesh_compdata$canopysp, "Hial", "Pema", "Viko", "Vogu",
+            "topright", c("HIAL", "PEMA", "VIKO", "VOGU"), mesh_compdata$meshtype, "bottomright", c("Small", "Regular"))
+
+#This tests whether the ellipses are working off the right data by showing the mesh types for each trap rather than the treatments.
+nmsplot_new(mesh_seedcomp.mds, mesh_compdata$meshtype, "meshsmall", "meshreg",
+            "topright", c("Small", "Regular"), mesh_compdata$meshtype, "bottomright", c("Small", "Regular"))
+
