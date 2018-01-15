@@ -9,7 +9,9 @@ library(readxl); library(plyr); library(ggplot2); library(reshape2); library(bas
 setwd("Data/RawData")
 
 #naming datafile seedrain from excel file and pulling data from sheet 4
-seedrain <-read_excel("Lluvia de semillas_RBA_20Apr15_bk_10Mar17.xlsx", sheet=4, col_names=TRUE, na= "NA")
+seedrain <-read_excel("Lluvia de semillas_RBA_20Apr15_bk_15Jan18.xlsx", sheet=4, col_names=TRUE, na= "NA")
+
+#May get a warning message that states expecting numeric but got 'Ave' this is for the damage/processing of seeds by birds and for the defecation aspect.  About 1000 seeds were presumed to be dispersed by birds and found as defecation or possible defecation in traps.
 
 #Change col names to english and abbreviate
 colnames(seedrain) <- c("week", "date", "trap", "sample", "treatment", "block", "quad", "type", "species", "fruitnum", "seednum", "poop", "damaged", "obs")
@@ -23,6 +25,7 @@ seedrain$species<-as.factor(seedrain$species)
 #check to see what species names are now
 levels(seedrain$species)
 summary(seedrain$species)
+
 #change incorrect species names
 levels(seedrain$species)<-gsub("kochnyi", "koschnyi", levels(seedrain$species))
 levels(seedrain$species)<-gsub("seemanii", "seemannii", levels(seedrain$species))
@@ -40,8 +43,12 @@ levels(seedrain$species) <- gsub("aerugynosa", "aeruginosa", levels(seedrain$spe
 #check to see what species names are now
 levels(seedrain$species)
 
+## Export part of seed rain data to allow for look at differences between fruit and seed.
+## pound out when not needing to export
+#write.csv(seedrain, "fos_sr.csv")
+
 #Add in small seed final
-seedrain_new <-read_excel("Lluvia de semillas_RBA_20Apr15_bk_10Mar17.xlsx", sheet=6, col_names=TRUE, na= "NA")
+seedrain_new <-read_excel("Lluvia de semillas_RBA_20Apr15_bk_15Jan18.xlsx", sheet=6, col_names=TRUE, na= "NA")
 
 #Change col names to english and abbreviate
 colnames(seedrain_new) <- c("trap", "date", "dategerminated", "seednum", "species", "startgerminate", "roottrainer", "comments")
@@ -65,6 +72,7 @@ levels(seedrain_new$species)<-gsub("pyramidatha", "pyramidata", levels(seedrain_
 levels(seedrain_new$species)<-gsub("warczewiczia", "warszewiczia", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("witheringya asterotrycha", "witheringia asterotricha", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("conostegia densiflora", "miconia approximata", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("donnell-smithi", "donnell-smithii", levels(seedrain_new$species))
 
 #Check to make sure names look good
 levels(seedrain_new$species)
@@ -274,5 +282,7 @@ write.csv(removed_sub, "yearsub_no_trtsp.csv", row.names = FALSE)
 #all files were written 5 April 2017
 #Then they were rewritten 6 April 2017
 # (hopefully) Finals were rewritten 11 May 2017
-# Files were rewritten again after confirmation from Ricardo that two species with no seeds recorded had seeds that were not read to germinate.
+# Files were rewritten again after confirmation from Ricardo that two species with no seeds recorded had seeds that were not ready to germinate.
+
+#Files rewritten again and updated on 15 Jan 18.  Added one species name which needed to be changed. See github notes.
 
