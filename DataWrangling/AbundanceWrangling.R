@@ -25,3 +25,5 @@ write.csv (abund, "abund_sub_notrtsp.csv", row.names = FALSE)
 #added in columns in excel for predictor variables of treatment and block
 
 # finished on 15 May 2017
+
+# Redone on 22 Jan 18 because names needed to be changed.
