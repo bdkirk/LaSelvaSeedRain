@@ -40,6 +40,7 @@ levels(seedrain$species)<- gsub("sapindioides", "sapindoides", levels(seedrain$s
 levels(seedrain$species)<-gsub("papilosa", "papillosa", levels(seedrain$species))
 levels(seedrain$species)<-gsub("conostegia crenula", "clidemia crenulata", levels(seedrain$species))
 levels(seedrain$species) <- gsub("aerugynosa", "aeruginosa", levels(seedrain$species))
+
 #check to see what species names are now
 levels(seedrain$species)
 
@@ -72,7 +73,7 @@ levels(seedrain_new$species)<-gsub("pyramidatha", "pyramidata", levels(seedrain_
 levels(seedrain_new$species)<-gsub("warczewiczia", "warszewiczia", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("witheringya asterotrycha", "witheringia asterotricha", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("conostegia densiflora", "miconia approximata", levels(seedrain_new$species))
-levels(seedrain_new$species)<-gsub("donnell-smithi", "donnell-smithii", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("donell-smithi", "donnell-smithii", levels(seedrain_new$species))
 
 #Check to make sure names look good
 levels(seedrain_new$species)
@@ -120,19 +121,24 @@ seedrain_all <- merge(seedrain_all, trap_trt, by="trap", all.x=TRUE)
 seed_b_c <- ddply(seedrain_all, .(treatment, block), summarise, total=sum(total_seednum))
 seed_b_c
 
-#funciton used to calculate the total number of seeds for each of the species in seed rain
+#function used to calculate the total number of seeds for each of the species in seed rain
 species_seeds <- ddply(seedrain_all, .(species), summarise, total=sum(total_seednum))
 species_seeds
 
 seed_2 <- ddply(seedrain_all, .(treatment, species), summarise, total=sum(total_seednum))
 seed_2
 #function to calculate the total seed number across the four blocks
-seed_b <- ddply(seedrain_all, .(block), summarise, total=sum(total_seednum))
+seed_b <- ddply(seedrain_all, .(species, block, treatment), summarise, total=sum(total_seednum))
 seed_b
-#function to calculate the total seed number across the four overstory treatments
-seed_c <- ddply(seedrain_all, .(treatment), summarise, total=sum(total_seednum))
-seed_c
+write.csv(seed_b, "blockcheck.csv")
 
+#function to calculate the total seed number across the four overstory treatments
+seed_c <- ddply(seedrain_all, .(treatment, block), summarise, total=sum(total_seednum))
+write.csv(seed_c, "blockabund.csv")
+
+seed_d <- ddply(seedrain_all, .(species, treatment), summarise, total=sum(total_seednum))
+seed_e <- ddply(seedrain_all, .(treatment, species), summarise, total=sum(total_seednum))
+write.csv(seed_e, "summarycheck.csv")
 
 
 #################Add in Mesh type#####
@@ -284,5 +290,5 @@ write.csv(removed_sub, "yearsub_no_trtsp.csv", row.names = FALSE)
 # (hopefully) Finals were rewritten 11 May 2017
 # Files were rewritten again after confirmation from Ricardo that two species with no seeds recorded had seeds that were not ready to germinate.
 
-#Files rewritten again and updated on 15 Jan 18.  Added one species name which needed to be changed. See github notes.
+#Files rewritten again and updated on 15 Jan 18.  Added one species name which needed to be changed. See github notes.  Rewritten again on 22 Jan 18.
 
