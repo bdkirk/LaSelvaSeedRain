@@ -54,3 +54,4 @@ write.csv(div_data2, "div_sub_notrtsp.csv", row.names = FALSE)
 
 ##This data file has no treatment species and is subsetted for a year long period from 2-24-14 to 2-23-15
 
+#data reran on 24 Jan 18 because names were updated.
