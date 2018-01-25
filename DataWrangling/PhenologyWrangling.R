@@ -41,7 +41,7 @@ y <- pheno_data[,1]
 
 rankdata <- rankabundance(x, y="y",factor="species", "plot" ,t=qt(0.975,df=14))
 write.csv(rankdata, "pheno_rankdata.csv")
-rankplot <- rankabunplot(rankdata, addit=FALSE, labels="species",scale="abundance")
+rankplot <- rankabunplot(rankdata, addit=FALSE, labels="species",scale="logabun")
 
 ########Create monthly summaries for the plots######
 pheno$date <- as.Date(pheno$date, format = ("%Y-%m-%d"))
