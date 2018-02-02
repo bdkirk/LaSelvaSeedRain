@@ -6,7 +6,7 @@
 
 ############ Abundance ############
 #add library
-library(dplyr); library(plyr); library(vegan)
+library(dplyr); library(plyr); library(vegan); library(tidyr)
 
 #Set wd
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
@@ -18,8 +18,8 @@ sum_trap <- ddply(mesh_abund, .(trap), summarise, seednum=sum(total_seednum))
 
 #assigning canopy species, block and quad to a particular trap number
 ##want to add in overstory treatment to new dataset by matching it to trap
-trap_trt <- mesh_abund[, c("trap", "canopysp", "block", "meshtype", "plot")]
-trap_trt <- ddply(trap_trt, .(trap, canopysp, block, meshtype, plot), summarise, n=length(plot))
+trap_trt <- mesh_abund[, c("trap", "treatment", "block", "meshtype", "plot")]
+trap_trt <- ddply(trap_trt, .(trap, treatment, block, meshtype, plot), summarise, n=length(plot))
 trap_trt <- trap_trt[,-6]
 
 #check and make sure two data files have same number of rows to be merged.

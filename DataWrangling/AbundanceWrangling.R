@@ -5,7 +5,7 @@
 
 
 #Load libraries
-library(readr); library(plyr); library(ggplot2); library(reshape2)
+library(readr); library(plyr); library(ggplot2); library(reshape2); library(tidyr)
 
 #set working directory to folder
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
@@ -19,11 +19,15 @@ seedrain_plot <- ddply(abundance, .(plot, species), summarise, seednum=sum(total
 str(abundance)
 abund <- ddply(abundance, .(plot), summarise, total_seednum=sum(total_seednum))
 
-write.csv (abund, "abund_sub_notrtsp.csv", row.names = FALSE)
+#add in columns for block and treatment
+abund2 <- separate(abund, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 
-#Need to do the following:
-#added in columns in excel for predictor variables of treatment and block
+write.csv (abund2, "abund_sub_notrtsp.csv", row.names = FALSE)
+
+
 
 # finished on 15 May 2017
 
 # Redone on 22 Jan 18 because names needed to be changed.
+
+# redone on 2 Feb 18 to add in columns for block and treatment

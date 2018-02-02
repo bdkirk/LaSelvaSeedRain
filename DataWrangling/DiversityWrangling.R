@@ -5,7 +5,7 @@
 #Experimental design: RCBD, C. Total df = 14
 
 #load libraries
-library(readxl); library(plyr); library(ggplot2); library(reshape2); library(base); library(vegan)
+library(readxl); library(plyr); library(ggplot2); library(reshape2); library(base); library(vegan); library(tidyr)
 
 #bring in original data file with overstory species removed that has been cut to the specific dates
 setwd("Data/TidyData")
@@ -44,8 +44,15 @@ y$divnorm <- exp(diversity(y, index = "shannon"))
 #bind x and y back together
 div_data2 <- cbind(x, y[,124:127])
 tail(div_data2)
+
+#change name for X column
+names(div_data2)[names(div_data2) == "x"] <- "plot"
+
+#add in columns for treatment and block
+div_data3 <- separate(div_data2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
+
 #create csv file that can be used to do NMDS calculations
-write.csv(div_data2, "div_sub_notrtsp.csv", row.names = FALSE)
+write.csv(div_data3, "div_sub_notrtsp.csv", row.names = FALSE)
 
 # NEED to manually add in block and treatment
 
@@ -55,3 +62,5 @@ write.csv(div_data2, "div_sub_notrtsp.csv", row.names = FALSE)
 ##This data file has no treatment species and is subsetted for a year long period from 2-24-14 to 2-23-15
 
 #data reran on 24 Jan 18 because names were updated.
+
+# Rewrote data on 2 Feb 18 so I could add in treatment and block

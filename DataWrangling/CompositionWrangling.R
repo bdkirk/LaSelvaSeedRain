@@ -4,7 +4,7 @@
 # Note when analyzing that the model needs to include blocks
 
 #load libraries
-library(readr); library(plyr); library(ggplot2); library(reshape2); library(base)
+library(readr); library(plyr); library(ggplot2); library(reshape2); library(base); library(tidyr)
 
 #Get tidy file of all original data and reformat
 setwd("Data/TidyData")
@@ -26,9 +26,11 @@ species_comp <- species_comp[, -which(names(species_comp)=="NA")]
 #Replace NA's with zeros
 species_comp[is.na(species_comp)] <- 0
 
-#create csv file that can be used to do NMDS calculations
-write.csv(species_comp, "comp_sub_notrtsp.csv", row.names = FALSE)
+#add in columns for block and treatment
+species_comp2 <- separate(species_comp, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 
-# need to manually add in block and canopysp columns in excel
+#create csv file that can be used to do NMDS calculations
+write.csv(species_comp2, "comp_sub_notrtsp.csv", row.names = FALSE)
 
 #Finished on 12 May 17
+# found separate function that adds in block and treatment rather than doing it manually.
