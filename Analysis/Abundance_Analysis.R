@@ -11,11 +11,16 @@ library(ggplot2); library(car); library(lsmeans); library(stats); library(lme4);
 #Bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 abundanalysis <- read.csv("abund_sub_notrtsp.csv")
-str(abundanalysis) #manually added in two columns after making the tidy data file to distinguish the block and plot
+str(abundanalysis)
 abundanalysis$block <- as.factor(abundanalysis$block)
 str(abundanalysis) #verify block is a factor
 
-#bring in data for other y response variables
+#--------------------------------------------------------------------
+######## Exploration of Plot Data #######
+#This section looks at how distance, slope and aspect vary in relation to seed size.
+#NOTE: Analysis did not end up including these variables.  Distance would not explain what's happening after 26 years. Aspect and slope are assumed to be similar between treatments rather than within blocks because of the experimental design.
+
+# bring in y variables to describe plot (aspect, slope, dist from mature forest.)
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/RawData")
 abundattrib <- read.csv("Plot_attributes.csv")
 
@@ -27,17 +32,15 @@ str(abund)
 abund$Dist <- as.factor(abund$Dist)
 abund$ï..Plot <- NULL
 
-
-######## Exploration of Data #######
-#This section looks at how distance, slope and aspect vary in relation to seed size.
-
-
 #Plotting to look at how the data relates
 plot(abund$total_seednum, abund$Slope)
 plot(abund$total_seednum, abund$Aspect)
 plot(abund$total_seednum, abund$Dist)
 #plot will vary directly with these covariates
 
+#look at distance
+boxplot(abund$total_seednum~abund$Dist)
+#no clear trend seen here
 
 #add in se and mean to dataset
 abund_summary <- abundanalysis %>% # the names of the new data frame and the data frame to be summarised
@@ -68,6 +71,17 @@ ggplot(abund, aes (Dist, total_seednum))+
 #abundanalysis$block <- as.factor(abundanalysis$block)
 #abundanalysis$treatment <- as.factor(abundanalysis$treatment)
 
+
+#Look at collinearity for distance
+with(abund, table(Dist, total_seednum))
+
+#variance inflation (vif)
+vif(glm(total_seednum~treatment +Dist, data = abund))
+
+#2. Perhaps consider distance to the mature forest as a factor.
+ggplot(abund, aes(Dist, total_seednum))+
+  geom_point()
+
 ########### Data Exploration for specific analysis#########
 ##a.  Outliers in Y / Outliers in X (Step 1)
 #i.	plot response and predictors to check for outliers  (only with continuous data)
@@ -75,13 +89,8 @@ ggplot(abund, aes (Dist, total_seednum))+
 hist(abundanalysis$total_seednum)
 boxplot(abundanalysis$total_seednum~ abundanalysis$treatment, xlab="treatment", ylab="seednum", main= "Seed abundance per treatment")
 
-
-#look at distance
-boxplot(abund$total_seednum~abund$Dist)
-#no clear trend seen here
-
 #No difference found when looking at logsum of abundance.
-#boxplot(abundanalysis$logsum~ abundanalysis$treatment, xlab="treatment", ylab="seednum")
+#boxplot(abundanalysis$logsum~ abundanalysis$treatment, xlab="treatment", ylab="seednum") #large controversy about whether to use log or not but generally, you do not use log for count data.
 
 #Much more variance in hial
 #one outlier in Y, hial 2 but will keep, X is categorical
@@ -92,13 +101,12 @@ boxplot(abund$total_seednum~abund$Dist)
 ##c.	Collinearity X: correlation between covariates (Step 5)
 #i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
 with(abundanalysis, table(treatment, total_seednum))
-with(abund, table(Dist, total_seednum))
 
 #Missing one plot, vogu1.
 ##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
 #check variance inflation factor
-vif(glm(total_seednum~ treatment +block + Dist, data = abund))
-vif(glm(total_seednum~treatment +Dist, data = abund))
+vif(glm(total_seednum~ treatment +block, data = abundanalysis))
+
 # model shows interactions when include the treatment*block, shows collinearity
 #vif was less than 10
 
@@ -114,10 +122,6 @@ ggplot(abundanalysis, aes(treatment, total_seednum, color=block))+
 ggplot(abundanalysis, aes(treatment, total_seednum, color=treatment))+
   geom_boxplot()+
   facet_grid(.~block)
-
-#2. Perhaps consider distance to the mature forest as a factor.
-ggplot(abund, aes(Dist, total_seednum))+
-  geom_point()
 
 #Characters are not correct for the following two lines
 #hist(abund$Dist)
@@ -186,133 +190,29 @@ ggplot(abundanalysis, aes(block, total_seednum))+
 
 #1) Does abundance of seeds differ between overstory treatments? 
 
-#using all data
-#total_seednum~ block+treatment, family=gaussian  #by default, an identity link
+##a)changed model to glmer because this will account for overdispersion with the poisson distribution.
+abund.glm <- glmer(total_seednum ~ block+treatment+(1|plot), data=abundanalysis, family = poisson)
 
-abundmod1<-glm(total_seednum~block+treatment, data=abundanalysis)
-summary(abundmod1)
-anova(abundmod1) #should not use if unbalanced
-
-
-#check out the design matrix
-head(model.matrix(abundmod1))
-
-# Opinions on model selection- much disagreement about which is best. 
-
-# 1. Classical Hypothesis testing: drop all nonsignificant predictors, then report final model and interpret differences between levels of a predictor in final model. 
-
-# anova(model) gives Type I sums of squares, which means the reference level is tested first and then other levels, and then interactions. R defaults to treatment contrasts. Can get different results for unbalanced datasets depending on which factor is entered first in the model and thus considered first. 
-
-with(abundanalysis,tapply(total_seednum, list(treatment, block), mean))
-
-##can use car package to do Type II or III sums of squares
-#Type III can be used with interactions
-Anova(abundmod1, type="III") 
-
-#explore contrasts
-options('contrasts') #shows what contrasts R is using
-#can set contrasts to SAS default. 
-abundmod1a<-glm(total_seednum~block+treatment, data=, contrasts = list(treatment = "contr.SAS", block="contr.SAS"))
-summary(abundmod1a)
-
-#Type II
-Anova(glm(total_seednum~block+treatment, data=abundanalysis), type="II")  #note - type II can't handle interactions
-#compare against 
-anova(glm(total_seednum~treatment+block, data=abundanalysis))
-anova(glm(total_seednum~block+treatment, data=abundanalysis))
-
-#lsmeans
-cpyblk<-pairs(lsmeans(abundmod1, ~treatment | block)) # in lsmeans package
-blkcpy <- pairs(lsmeans(abundmod1, ~block | treatment))
-rbind(cpyblk, blkcpy)
-
-####### 2. Classic model selection: Create all sub-models. Use LRT to come up with best model. #####
-abundmod1<-glm(logsum~block+treatment, data=abundanalysis)
-abundmod2<-glm(total_seednum~treatment+block, data=abundanalysis)
-abundmod3<-glm(logsum~treatment, data=abundanalysis)
-abundmod4<-glm(logsum~block, data=abundanalysis)
-abundmod5 <- glm(total_seednum~plot, data=abundanalysis)
-abundmod_null<-glm(total_seednum~1, data=abundanalysis)
-abundmod6 <- glm(logsum~treatment*block, data=abundanalysis)
-
-summary(abundmod5)
-anova(abundmod1, abundmod2, test = "Rao")  #model 1 not sig better than 2
-anova(abundmod1, abundmod3)  #model 2 not sig better than 3
-anova(abundmod1, abundmod4) 
-anova.glm(abundmod4, abundmod5)#can't run this, because not sub-model - needs to be nested to compare with LRT
-anova(abundmod3, abundmod_null) #model 3 sig better fit than null model
-
-# 3. Information theoretic approach- compare models using AIC- get competing models. AIC is a measure of the goodness of fit of an estimated statistical model. It is -2*log-likelihood + 2*npar, where npar is the number of effective parameters in the model. More complex models get penalized. 
-
-AIC(abundmod1, abundmod6, abundmod3, abundmod4, abundmod5, abundmod_null) #abundmod3 has lowest AIC, by almost 2 points. Might consider model averaging. 
-
-#check out packages MuMIn and AICcmodavg for a variety of useful tools. 
-
-# 4. If you do an experiment, don’t do any model selection at all- fit model that you think makes sense, and keep everything as it is, even non-significant parameters. Some might choose to do some model selection to keep only significant interactions, but once fit model with main effect terms, then stick with it. 
-
-confint(abundmod3) #Saipan abunds are significantly smaller than Guam (confidence intervals do not overlap 0)
-
-#######Model validation######
-#A. Look at homogeneity: plot fitted values vs residuals
-#B. Look at influential values: Cook
-#C. Look at independence: 
-#      plot residuals vs each covariate in the model
-#      plot residuals vs each covariate not in the model
-#      Common sense 
-#D. Look at normality of residuals: histogram
-
-#for glm can use plot(model)
-plot(abundmod1)
-
-#extract residuals
-E1 <- resid(abundmod1, type = "pearson")
-
-#plot fitted vs residuals
-F1 <- fitted(abundmod1, type = "response")
-
-par(mfrow = c(2,2), mar = c(5,5,2,2))
-plot(x = F1, 
-     y = E1, 
-     xlab = "Fitted values",
-     ylab = "Pearson residuals", 
-     cex.lab = 1.5)
-abline(h = 0, lty = 2)
-
-plot(x=abundanalysis$treatment, y=F1) #heterogeneity in residuals bt treatment
-plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
-plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
-
-########### RESIDUALS #################
-plot(abundmod1)
-#this model has the logsum
-
-plot(abundmod2) 
-#This part involves determining which model is most appropriate
-#get residuals and plot residuals vs predicted values
-abund.glm <-  glm(total_seednum ~ block+treatment, data=abundanalysis,  family = poisson) 
-abund.res = resid(abund.glm) 
-
-plot(abundanalysis$total_seednum, abund.res, ylab="Residuals", xlab="Seed Abundance", main="Abundance pred by resid") 
-abline(0, 0) 
-
-anova(abund.glm)
-head(abundanalysis)
-length(unique(abundanalysis$plot))
-
-
-#change model to glmer because this will account for overdispersion with the poisson distribution.
-abund.glm <- glmer(total_seednum ~ block+treatment+(1|plot), data=abundanalysis, 
-                  family = poisson)
-
+##b)plot residuals to look at homogeneity
 abund.res <- resid(abund.glm)
 abund.pred <- predict(abund.glm)
 
 plot(abund.pred, abund.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
 abline(0, 0) 
 
+##c)plot histogram and Q-Q plot to look at normality
+qqnorm(abundanalysis$total_seednum)
+qqline(abundanalysis$total_seednum, col = 'red')
+
+#the above text produces a Normal Quantile Plot and this indicates that the data is not normally distributed as the points do not line up exactly on the line.  In this case it is better to use non-parametric methods for testing.
+hist(abund.res)
+
+##d) summary of data
 anova(abund.glm, test= "F")
 summary(abund.glm)
 
+
+##e) getting p-values
 #find Tukeys (HSD) and use for this data
 #if p-value is greater than 0.05, don't need to do HSD
 lsmeans(abund.glm, "treatment", contr= "pairwise")
@@ -347,19 +247,4 @@ ptukey(2.394*sqrt(2), nmeans= 4, df=8, lower = F)
 ####Have not figured out how to more efficiently export output and do a conversion.
 temp <- lsmeans(abund.glm, "treatment", contr= "pairwise")
 
-str(abund)
-abund$Dist <- as.factor(abund$Dist)
-#Incorporating distance into the model: None of the below works right now.  Need to reread email from Dr. Dixon on 3 July.
-abunddist.glm <- glmer(total_seednum~treatment+Dist+(1|plot), data= abund, family = poisson)
 
-summary(abunddist.glm)
-anova(abunddist.glm)
-
-library(lsmeans)
-lsmeans(abunddist.glm, "Dist", contr="pairwise")
-
-qqnorm(abundanalysis$total_seednum)
-qqline(abundanalysis$total_seednum, col = 'red')
-
-#the above text produces a Normal Quantile Plot and this indicates that the data is not normally distributed as the points do not line up exactly on the line.  In this case it is better to use non-parametric methods for testing.
-hist(abund.res)
