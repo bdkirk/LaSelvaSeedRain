@@ -14,7 +14,7 @@ divanalysis <- read.csv("div_sub_notrtsp.csv")
 tail(divanalysis)
 str(divanalysis)
 divanalysis$block <- as.factor(divanalysis$block)
-########### Data Exploration #########
+##### Data Exploration #########
 ##a.  Outliers in Y / Outliers in X 
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
@@ -76,7 +76,7 @@ with(divanalysis, ftable(treatment, block))
 #Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
 with(divanalysis, table(block, treatment))
 
-###Katie Rey Data Visualization####
+############ Katie Rey Data Visualization####
 library(dplyr); library(ggplot2)
 #Find outliers
 ggplot(divanalysis, aes(treatment, richness))+
@@ -103,7 +103,7 @@ ggplot(divanalysis, aes(block, richness))+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
 
-#################################################
+#################### Data Tidying ####################################
 # Fix up dataframe
 # a.	Remove missing values (NA’s)
 
@@ -114,133 +114,33 @@ ggplot(divanalysis, aes(block, richness))+
 
 # #in this situation, not necessary, bc no continuous predictors
 
-###########  Analysis   ###############
+#############################  Analysis   ###############
 
 #1) Does species richness of seeds differ between overstory treatments? 
 
-#using all data
-#total_seednum~ block+treatment, family=gaussian  #by default, an identity link
-
-richnessmod1<-glm(richness~block+treatment, data=divanalysis)
-summary(richnessmod1)
-anova(richnessmod1) #should not use if unbalanced
-
-richnessmod2 <- glm(richness~plot, data= divanalysis)
-richnessmod3 <- glm(richness~treatment*block, data = divanalysis)
-richnessmod4 <- glm(richness~treatment, data = divanalysis)
-richnessmod5 <- glm(richness~block, data = divanalysis)
-richnessmodnull <- glm(richness~1, data = divanalysis)
-anova(richnessmod4)
-#check out the design matrix
-head(model.matrix(abundmod1))
-
-# Opinions on model selection- much disagreement about which is best. 
-
-# 1. Classical Hypothesis testing: drop all nonsignificant predictors, then report final model and interpret differences between levels of a predictor in final model. 
-
-# anova(model) gives Type I sums of squares, which means the reference level is tested first and then other levels, and then interactions. R defaults to treatment contrasts. Can get different results for unbalanced datasets depending on which factor is entered first in the model and thus considered first. 
-
-with(abundanalysis,tapply(total_seednum, list(treatment, block), mean))
-
-##can use car package to do Type II or III sums of squares
-#Type III can be used with interactions
-Anova(richnessmod1, type="III") 
-
-#explore contrasts
-options('contrasts') #shows what contrasts R is using
-#can set contrasts to SAS default. 
-abundmod1a<-glm(total_seednum~block+treatment, data=, contrasts = list(treatment = "contr.SAS", block="contr.SAS"))
-summary(abundmod1a)
-
-#Type II
-Anova(glm(total_seednum~block+treatment, data=abundanalysis), type="II")  #note - type II can't handle interactions
-#compare against 
-anova(glm(total_seednum~treatment+block, data=abundanalysis))
-anova(glm(total_seednum~block+treatment, data=abundanalysis))
-
-#lsmeans
-cpyblk<-pairs(lsmeans(abundmod1, ~treatment | block)) # in lsmeans package
-blkcpy <- pairs(lsmeans(abundmod1, ~block | treatment))
-rbind(cpyblk, blkcpy)
-
-####### 2. Classic model selection: Create all sub-models. Use LRT to come up with best model. #####
-abundmod1<-glm(logsum~block+treatment, data=abundanalysis)
-abundmod2<-glm(total_seednum~treatment+block, data=abundanalysis)
-abundmod3<-glm(logsum~treatment, data=abundanalysis)
-abundmod4<-glm(logsum~block, data=abundanalysis)
-abundmod5 <- glm(total_seednum~plot, data=abundanalysis)
-abundmod_null<-glm(total_seednum~1, data=abundanalysis)
-abundmod6 <- glm(logsum~treatment*block, data=abundanalysis)
-
-summary(abundmod5)
-anova(abundmod1, abundmod2, test = "Rao")  #model 1 not sig better than 2
-anova(abundmod1, abundmod3)  #model 2 not sig better than 3
-anova(abundmod1, abundmod4) 
-anova.glm(abundmod4, abundmod5)#can't run this, because not sub-model - needs to be nested to compare with LRT
-anova(abundmod3, abundmod_null) #model 3 sig better fit than null model
-
-# 3. Information theoretic approach- compare models using AIC- get competing models. AIC is a measure of the goodness of fit of an estimated statistical model. It is -2*log-likelihood + 2*npar, where npar is the number of effective parameters in the model. More complex models get penalized. 
-
-AIC(abundmod1, abundmod6, abundmod3, abundmod4, abundmod5, abundmod_null) #abundmod3 has lowest AIC, by almost 2 points. Might consider model averaging. 
-
-#check out packages MuMIn and AICcmodavg for a variety of useful tools. 
-
-# 4. If you do an experiment, don’t do any model selection at all- fit model that you think makes sense, and keep everything as it is, even non-significant parameters. Some might choose to do some model selection to keep only significant interactions, but once fit model with main effect terms, then stick with it. 
-
-confint(abundmod3) #Saipan abunds are significantly smaller than Guam (confidence intervals do not overlap 0)
-
-#######Model validation######
-#A. Look at homogeneity: plot fitted values vs residuals
-#B. Look at influential values: Cook
-#C. Look at independence: 
-#      plot residuals vs each covariate in the model
-#      plot residuals vs each covariate not in the model
-#      Common sense 
-#D. Look at normality of residuals: histogram
-
-#for glm can use plot(model)
-plot(abundmod1)
-
-#extract residuals
-E1 <- resid(abundmod1, type = "pearson")
-
-#plot fitted vs residuals
-F1 <- fitted(abundmod1, type = "response")
-
-par(mfrow = c(2,2), mar = c(5,5,2,2))
-plot(x = F1, 
-     y = E1, 
-     xlab = "Fitted values",
-     ylab = "Pearson residuals", 
-     cex.lab = 1.5)
-abline(h = 0, lty = 2)
-
-plot(x=abundanalysis$treatment, y=F1) #heterogeneity in residuals bt treatment
-plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
-plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
-
-########### RESIDUALS #################
+##a) model development
 richnessmod1<-glmer(richness~block+treatment+(1|plot), family = poisson, data=divanalysis)
-summary(richnessmod1)
-anova(richnessmod1, test= "F") 
 
-
+##b) plot residuals to look for homogeneity
 plot(richnessmod1)
-rich.res = resid(richnessmod1)
-rich.pred = predict(richnessmod1)
+rich.res <-  resid(richnessmod1)
+rich.pred <-  predict(richnessmod1)
 
 plot(rich.pred, rich.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
 abline(0, 0) 
 
- 
-#check for normality
+##c) plot histogram and qq plot to check for normality
 hist(rich.res)
 
 #check for normality with q-qplot
 qqnorm(divanalysis$richness)
 qqline(divanalysis$richness, col = 'red')
 
+##d) summary of data
+summary(richnessmod1)
+anova(richnessmod1, test= "F") 
 
+##e) getting p-values
 lsmeans(richnessmod1, "treatment", contr= "pairwise")
 #These p-values are not t-based p-values that account for df but you can get those by using the code below:
 
@@ -277,7 +177,7 @@ ptukey(abs(-0.372)*sqrt(2), nmeans= 4, df=8, lower = F)
 ################################################################################
 ######################### Diversity #############################################
 ################################################################################
-########### Data Exploration #########
+##### Data Exploration #########
 ##a.  Outliers in Y / Outliers in X 
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
@@ -342,7 +242,7 @@ with(divanalysis, ftable(treatment, block))
 #Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
 with(divanalysis, table(block, treatment))
 
-###Katie Rey Data Visualization####
+########### Katie Rey Data Visualization####
 
 library(dplyr); library(ggplot2)
 #Find outliers
@@ -370,7 +270,7 @@ ggplot(divanalysis, aes(block, diversity))+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
 
-##### Fix up dataframe #####
+################### Fix up dataframe #####
 # a.	Remove missing values (NA’s)
 
 # Not applicable
@@ -380,159 +280,48 @@ ggplot(divanalysis, aes(block, diversity))+
 
 # #in this situation, not necessary, bc no continuous predictors
 
-###########  Analysis   ###############
+###########################  Analysis   ###############
 
 #1) Does abundance of seeds differ between overstory treatments? 
 
-#using all data
-#total_seednum~ block+treatment, family=gaussian  #by default, an identity link
-
-diversitymod1<-glm(diversity~block+treatment, data=divanalysis)
-summary(diversitymod1)
-anova(diversitymod1) #should not use if unbalanced
-
-diversitymod2 <- glm(diversity~plot, data= divanalysis)
-diversitymod3 <- glm(diversity~treatment*block, data = divanalysis)
-diversitymod4 <- glm(diversity~treatment, data = divanalysis)
-diversitymod5 <- glm(diversity~block, data = divanalysis)
-diversitymodnull <- glm(diversity~1, data = divanalysis)
-anova(diversitymod4)
-#check out the design matrix
-head(model.matrix(abundmod1))
-
-# Opinions on model selection- much disagreement about which is best. 
-
-# 1. Classical Hypothesis testing: drop all nonsignificant predictors, then report final model and interpret differences between levels of a predictor in final model. 
-
-# anova(model) gives Type I sums of squares, which means the reference level is tested first and then other levels, and then interactions. R defaults to treatment contrasts. Can get different results for unbalanced datasets depending on which factor is entered first in the model and thus considered first. 
-
-with(abundanalysis,tapply(total_seednum, list(treatment, block), mean))
-
-##can use car package to do Type II or III sums of squares
-#Type III can be used with interactions
-Anova(abundmod1, type="III") 
-
-#explore contrasts
-options('contrasts') #shows what contrasts R is using
-#can set contrasts to SAS default. 
-abundmod1a<-glm(total_seednum~block+treatment, data=, contrasts = list(treatment = "contr.SAS", block="contr.SAS"))
-summary(abundmod1a)
-
-#Type II
-Anova(glm(total_seednum~block+treatment, data=abundanalysis), type="II")  #note - type II can't handle interactions
-#compare against 
-anova(glm(total_seednum~treatment+block, data=abundanalysis))
-anova(glm(total_seednum~block+treatment, data=abundanalysis))
-
-#lsmeans
-cpyblk<-pairs(lsmeans(abundmod1, ~treatment | block)) # in lsmeans package
-blkcpy <- pairs(lsmeans(abundmod1, ~block | treatment))
-rbind(cpyblk, blkcpy)
-
-####### 2. Classic model selection: Create all sub-models. Use LRT to come up with best model. #####
-abundmod1<-glm(logsum~block+treatment, data=abundanalysis)
-abundmod2<-glm(total_seednum~treatment+block, data=abundanalysis)
-abundmod3<-glm(logsum~treatment, data=abundanalysis)
-abundmod4<-glm(logsum~block, data=abundanalysis)
-abundmod5 <- glm(total_seednum~plot, data=abundanalysis)
-abundmod_null<-glm(total_seednum~1, data=abundanalysis)
-abundmod6 <- glm(logsum~treatment*block, data=abundanalysis)
-
-summary(abundmod5)
-anova(abundmod1, abundmod2, test = "Rao")  #model 1 not sig better than 2
-anova(abundmod1, abundmod3)  #model 2 not sig better than 3
-anova(abundmod1, abundmod4) 
-anova.glm(abundmod4, abundmod5)#can't run this, because not sub-model - needs to be nested to compare with LRT
-anova(abundmod3, abundmod_null) #model 3 sig better fit than null model
-
-# 3. Information theoretic approach- compare models using AIC- get competing models. AIC is a measure of the goodness of fit of an estimated statistical model. It is -2*log-likelihood + 2*npar, where npar is the number of effective parameters in the model. More complex models get penalized. 
-
-AIC(abundmod1, abundmod6, abundmod3, abundmod4, abundmod5, abundmod_null) #abundmod3 has lowest AIC, by almost 2 points. Might consider model averaging. 
-
-#check out packages MuMIn and AICcmodavg for a variety of useful tools. 
-
-# 4. If you do an experiment, don’t do any model selection at all- fit model that you think makes sense, and keep everything as it is, even non-significant parameters. Some might choose to do some model selection to keep only significant interactions, but once fit model with main effect terms, then stick with it. 
-
-confint(abundmod3) #Saipan abunds are significantly smaller than Guam (confidence intervals do not overlap 0)
-
-#######Model validation######
-#A. Look at homogeneity: plot fitted values vs residuals
-#B. Look at influential values: Cook
-#C. Look at independence: 
-#      plot residuals vs each covariate in the model
-#      plot residuals vs each covariate not in the model
-#      Common sense 
-#D. Look at normality of residuals: histogram
-
-#for glm can use plot(model)
-plot(abundmod1)
-
-#extract residuals
-E1 <- resid(abundmod1, type = "pearson")
-
-#plot fitted vs residuals
-F1 <- fitted(abundmod1, type = "response")
-
-par(mfrow = c(2,2), mar = c(5,5,2,2))
-plot(x = F1, 
-     y = E1, 
-     xlab = "Fitted values",
-     ylab = "Pearson residuals", 
-     cex.lab = 1.5)
-abline(h = 0, lty = 2)
-
-plot(x=abundanalysis$treatment, y=F1) #heterogeneity in residuals bt treatment
-plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
-plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
-
-########### RESIDUALS #################
+##a) model development
 diversitymod1<-lm(diversity~block+treatment, data=divanalysis)
-summary(diversitymod1)
-anova(diversitymod1, test = "F") #should not use if unbalanced
 
-
+##b)plot residuals to look at homogeneity
 plot(diversitymod1)
 div.res <- resid(diversitymod1)
 div.pred <- predict(diversitymod1)
 
 plot(div.pred, div.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
 abline(0,0)
-#get residuals and plot residuals vs predicted values
-div.glm <- glm(diversity ~ block+treatment, data=divanalysis) 
-div.res1 <- resid(div.glm) 
-div.pred1 <- predict(div.glm)
-plot (div.pred1, div.res1)
-
-anova(div.glm, test = "F")
-summary(div.glm)
-
-##Not necessary to use, read below
-div.res2 <- residuals.glm(div.glm)
-div.pred2 <- predict.glm(div.glm)
-plot(div.pred2, div.res2)
-##did not find any difference using the glm specific functions
 
 plot(divanalysis$diversity, div.res, ylab="Residuals", xlab="Seed Species diversity", main="diversity pred by resid") 
 abline(0, 0) 
 
-#chedk for normality
+##c)plot histogram and Q-Q plot to check for normality
 hist(div.res)
 
 #check for normality with q-qplot
 qqnorm(divanalysis$diversity)
 qqline(divanalysis$diversity, col = 'red')
 
+##d) summary of analysis
+summary(diversitymod1)
+anova(diversitymod1, test = "F") #should not use if unbalanced
+
+##e) look for p-values
+
 ###Found no difference on 31 May between using glm or lm for shannon wiener diversity. lm is simpler so I will use this.  Talked with Dr. Dixon on 30 June and glm will revert to lm if the family is Guassian.
 
 lsmeans(diversitymod1, "treatment", contr= "pairwise")
-#These p-values are not t-based p-values that account for df but you can get those by using the code below:
-
+#These p-values are not significant but wanted to see how close PEMA was to significance
+ 
 
 ################################################################################
 ######################## EVENNESS ##############################################
 ###############################################################################
 
-########### Data Exploration #########
+##### Data Exploration #########
 ##a.  Outliers in Y / Outliers in X 
 #i.	plot response and predictors to check for outliers  (only with continuous data)
 #1.	Use Mydotplot or dotplot or boxplot, identify outliers
@@ -597,7 +386,7 @@ with(divanalysis, ftable(treatment, block))
 #Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
 with(divanalysis, table(block, treatment))
 
-###Katie Rey Data Visualization####
+######### Katie Rey Data Visualization####
 library(dplyr); library(ggplot2)
 #Find outliers
 ggplot(divanalysis, aes(treatment, evenness))+
@@ -624,7 +413,7 @@ ggplot(divanalysis, aes(block, evenness))+
   scale_fill_manual(values=cbPalette)+
   theme(legend.position="none")
 
-##### Fix up dataframe #####
+################ Fix up dataframe #####
 # a.	Remove missing values (NA’s)
 
 # Not applicable
@@ -634,139 +423,32 @@ ggplot(divanalysis, aes(block, evenness))+
 
 # #in this situation, not necessary, bc no continuous predictors
 
-###########  Analysis   ###############
-
+#########################  Analysis   ########################################
 #1) Does abundance of seeds differ between overstory treatments? 
 
-#using all data
-#total_seednum~ block+treatment, family=gaussian  #by default, an identity link
-
-evennessmod1<-glm(evenness~block+treatment, data=divanalysis)
-summary(evennessmod1)
-anova(evennessmod1) #should not use if unbalanced
-
-evennessmod2 <- glm(evenness~plot, data= divanalysis)
-evennessmod3 <- glm(evenness~treatment*block, data = divanalysis)
-evennessmod4 <- glm(evenness~treatment, data = divanalysis)
-evennessmod5 <- glm(evenness~block, data = divanalysis)
-evennessmodnull <- glm(evenness~1, data = divanalysis)
-anova(evennessmod4)
-#check out the design matrix
-head(model.matrix(abundmod1))
-
-# Opinions on model selection- much disagreement about which is best. 
-
-# 1. Classical Hypothesis testing: drop all nonsignificant predictors, then report final model and interpret differences between levels of a predictor in final model. 
-
-# anova(model) gives Type I sums of squares, which means the reference level is tested first and then other levels, and then interactions. R defaults to treatment contrasts. Can get different results for unbalanced datasets depending on which factor is entered first in the model and thus considered first. 
-
-with(abundanalysis,tapply(total_seednum, list(treatment, block), mean))
-
-##can use car package to do Type II or III sums of squares
-#Type III can be used with interactions
-Anova(abundmod1, type="III") 
-
-#explore contrasts
-options('contrasts') #shows what contrasts R is using
-#can set contrasts to SAS default. 
-abundmod1a<-glm(total_seednum~block+treatment, data=, contrasts = list(treatment = "contr.SAS", block="contr.SAS"))
-summary(abundmod1a)
-
-#Type II
-Anova(glm(total_seednum~block+treatment, data=abundanalysis), type="II")  #note - type II can't handle interactions
-#compare against 
-anova(glm(total_seednum~treatment+block, data=abundanalysis))
-anova(glm(total_seednum~block+treatment, data=abundanalysis))
-
-#lsmeans
-cpyblk<-pairs(lsmeans(abundmod1, ~treatment | block)) # in lsmeans package
-blkcpy <- pairs(lsmeans(abundmod1, ~block | treatment))
-rbind(cpyblk, blkcpy)
-
-####### 2. Classic model selection: Create all sub-models. Use LRT to come up with best model. #####
-abundmod1<-glm(logsum~block+treatment, data=abundanalysis)
-abundmod2<-glm(total_seednum~treatment+block, data=abundanalysis)
-abundmod3<-glm(logsum~treatment, data=abundanalysis)
-abundmod4<-glm(logsum~block, data=abundanalysis)
-abundmod5 <- glm(total_seednum~plot, data=abundanalysis)
-abundmod_null<-glm(total_seednum~1, data=abundanalysis)
-abundmod6 <- glm(logsum~treatment*block, data=abundanalysis)
-
-summary(abundmod5)
-anova(abundmod1, abundmod2, test = "Rao")  #model 1 not sig better than 2
-anova(abundmod1, abundmod3)  #model 2 not sig better than 3
-anova(abundmod1, abundmod4) 
-anova.glm(abundmod4, abundmod5)#can't run this, because not sub-model - needs to be nested to compare with LRT
-anova(abundmod3, abundmod_null) #model 3 sig better fit than null model
-
-# 3. Information theoretic approach- compare models using AIC- get competing models. AIC is a measure of the goodness of fit of an estimated statistical model. It is -2*log-likelihood + 2*npar, where npar is the number of effective parameters in the model. More complex models get penalized. 
-
-AIC(abundmod1, abundmod6, abundmod3, abundmod4, abundmod5, abundmod_null) #abundmod3 has lowest AIC, by almost 2 points. Might consider model averaging. 
-
-#check out packages MuMIn and AICcmodavg for a variety of useful tools. 
-
-# 4. If you do an experiment, don’t do any model selection at all- fit model that you think makes sense, and keep everything as it is, even non-significant parameters. Some might choose to do some model selection to keep only significant interactions, but once fit model with main effect terms, then stick with it. 
-
-confint(abundmod3) #Saipan abunds are significantly smaller than Guam (confidence intervals do not overlap 0)
-
-#######Model validation######
-#A. Look at homogeneity: plot fitted values vs residuals
-#B. Look at influential values: Cook
-#C. Look at independence: 
-#      plot residuals vs each covariate in the model
-#      plot residuals vs each covariate not in the model
-#      Common sense 
-#D. Look at normality of residuals: histogram
-
-#for glm can use plot(model)
-plot(abundmod1)
-
-#extract residuals
-E1 <- resid(abundmod1, type = "pearson")
-
-#plot fitted vs residuals
-F1 <- fitted(abundmod1, type = "response")
-
-par(mfrow = c(2,2), mar = c(5,5,2,2))
-plot(x = F1, 
-     y = E1, 
-     xlab = "Fitted values",
-     ylab = "Pearson residuals", 
-     cex.lab = 1.5)
-abline(h = 0, lty = 2)
-
-plot(x=abundanalysis$treatment, y=F1) #heterogeneity in residuals bt treatment
-plot(x=abundanalysis$block, y=F1) #heterogeneity in residuals wrt Native
-plot(x=abundanalysis$plot, y=F1) #residual variance larger at Guam sites than Saipan sites, but homogeneity bt sites within an island
-
-########### RESIDUALS #################
+##a) model development
 evennessmod1<-lm(evenness~block+treatment, data=divanalysis)
-summary(evennessmod1)
-anova(evennessmod1, test="F") #should not use if unbalanced
 
-
+##b)plot residuals to look at homogeneity
 plot(evennessmod1)
-#this model has the logsum
 
 even.res <- resid(evennessmod1)
 even.pred <- predict(evennessmod1)
 plot(even.pred, even.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
 abline(0,0)
 
-#get residuals and plot residuals vs predicted values
-even.glm = glm(evenness ~ block+treatment, data=divanalysis) 
-even.res = resid(even.glm) 
-
 plot(divanalysis$evenness, even.res, ylab="Residuals", xlab="Seed Species evenness", main="evenness pred by resid") 
 abline(0, 0) 
 
-#chedk for normality
-hist(even.res)
+##c)plot histogram and Q-Q plot to look at normality
+hist(even.res) #This histogram has a normal distribution
 
-#This histogram has a normal distribution
-
-#qqplot for normality
 qqnorm(divanalysis$evenness)
 qqline(divanalysis$evenness, col = 'red')
 
+##d) model summary analysis
+summary(evennessmod1)
+anova(evennessmod1, test="F") #should not use if unbalanced
+
+##e) p-values
 lsmeans(evennessmod1, "treatment", contr= "pairwise")
