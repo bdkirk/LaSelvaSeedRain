@@ -4,6 +4,7 @@
 
 #Read in libraries
 library(ggplot2); library(vegan); library(geomorph)
+
 #set wd
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
@@ -58,13 +59,14 @@ procD.lm(seedcomp.bc ~ block+treatment, data = compdata) # correct one
 #Dr. Dixon recommended using the + or additive to account for the interaction
 
 #This does a pair-wise comparison of the data
-advanced.procD.lm(seedcomp.bc ~ treatment, ~ 1, ~ treatment, data = compdata) # this is a null hypothesis but it doesn't account for random error variation from blocks.
+#advanced.procD.lm(seedcomp.bc ~ treatment, ~ 1, ~ treatment, data = compdata) # this is a null hypothesis but it doesn't account for random error variation from blocks.
 advanced.procD.lm(seedcomp.bc ~ block+ treatment , ~block, ~ treatment, data = compdata) #correct one; this one correctly looks at differences amongst the treatments when comparing the blocks
 
 
 #NMDS
 seedcomp.mds <- metaMDS(seed_comp, autotransform = F, expand = F, k = 2, try = 100)
 seedcomp.mds$stress
+
 #Ordination
 nmsplot(seedcomp.mds, compdata$treatment, "hial", "pema", "viko", "vogu",
         "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
@@ -97,9 +99,81 @@ NMDS.scree<-function(data_matrix, reps=3, max_factors=2) {
 NMDS.scree(seed_comp, reps=3, max_factors=7)
 #Based on this, you might use three dimensions rather than 2 dimensions
 seedcomp.mds2 <- metaMDS(seed_comp, autotransform = F, expand = F, k = 3, try = 100)
+seedcomp.mds2$stress
 stressplot(seedcomp.mds2)
 nmsplot(seedcomp.mds2, compdata$treatment, "hial", "pema", "viko", "vogu",
         "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
 
 ### Ran on 21 May and did not find significant difference between the treatments ###
-#Reran on 19 Jul after talkin with Dr. Dixon and we found that 2 dimensions was sufficient and that there are significant differences between vogu and pema.
+#Reran on 19 Jul after talking with Dr. Dixon and we found that 2 dimensions was sufficient and that there are significant differences between vogu and pema.
+
+
+## In August 2017, committee meeting discussed looking at P/A rather than relative abundance because in the tropics, it is common to have many rare species.
+
+##This analysis was run on 17 Jan 18
+
+#turn data into binary using decostand(data, method= "pa")
+
+
+###### Presence/Absence data #####
+
+#Get data
+compdata_j <- read.csv("comp_sub_notrtsp.csv")
+
+ncol(compdata_j)
+str(compdata_j[,1:10])
+compdata_j$block <- as.factor(compdata$block)
+
+#get only the species data from the compdata file
+seed_comp_j <- compdata_j[,4:126]
+
+#Turn this data into binary code to verify if vegdist does that
+#Don't need to use binary, just select binary=true
+#binary <- decostand(seed_comp_j, method = "pa")
+
+# Try using jaccard vegdist without binary and with binary and then do the same with the regular data set
+
+#1) Binary
+##a) b=false, binary
+#seedcomp.jc.b <- vegdist(binary, method= "jaccard", binary = FALSE)
+#seedcomp.jc.b
+#### found same results using the jaccard without decostand first and then doing binary equals true (0.46)
+
+##b) b=true, binary
+#seedcomp.jc.b.t <- vegdist(binary, method = "jaccard", binary = TRUE)
+#seedcomp.jc.b.t
+####found that these results are comprable to using binary and then having true values which we would expect because they are already binary(0.46)
+
+#name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
+seedcomp.jc <- vegdist(seed_comp_j, method = "jaccard", binary = TRUE)
+seedcomp.jc
+#### These results are comprable to (0.46) and were checked with above code.  It is safe to not convert to binary until vegdist.
+
+#seedcomp.jc.f <- vegdist(seed_comp_j, method= "jaccard", binary = FALSE)
+#seedcomp.jc.f
+##### Need to have binary = TRUE for this to work on the abundance data
+
+# PERMANOVA (Anderson et al. 2001)
+#procD.lm(seedcomp.bc ~ treatment+block, data = compdata) # this is not correct bc the type I and type III do not match correctly to compare with the treatment.
+procD.lm(seedcomp.jc ~ block+treatment, data = compdata_j) # correct one
+
+#Dr. Dixon recommended using the + or additive to account for the interaction
+### when running these results found p-value for treatment to be 0.005.
+
+#This does a pair-wise comparison of the data
+
+#advanced.procD.lm(seedcomp.jc ~ treatment, ~ 1, ~ treatment, data = compdata_j) # this is a null hypothesis but it doesn't account for random error variation from blocks.
+advanced.procD.lm(seedcomp.jc ~ block+ treatment , ~block, ~ treatment, data = compdata_j) #correct one; this one correctly looks at differences amongst the treatments when comparing the blocks
+
+
+#NMDS
+seedcompj.mds <- metaMDS(binary, autotransform = F, expand = F, k = 2, try = 100)
+seedcompj.mds$stress
+str(seedcompj.mds)
+
+#look at str(seedcompj.mds) to look at differences in the values.
+
+#Ordination
+nmsplot(seedcompj.mds, compdata_j$treatment, "hial", "pema", "viko", "vogu",
+        "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
+##These need to be in the order they are in the file.
