@@ -6,11 +6,11 @@
 ################### Abundance Analysis ##########
 
 #Load libraries
-library(ggplot2); library(car); library(lsmeans); library(stats); library(lme4); library(dplyr)
+library(ggplot2); library(car); library(lsmeans); library(stats); library(lme4); library(dplyr);library(multcomp)
 
 #Bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
-abundanalysis <- read.csv("abund_sub_notrtsp.csv")
+abundanalysis <- read.csv("abund_sub_notrtsp_nw.csv")
 str(abundanalysis)
 abundanalysis$block <- as.factor(abundanalysis$block)
 str(abundanalysis) #verify block is a factor
@@ -194,55 +194,62 @@ ggplot(abundanalysis, aes(block, total_seednum))+
 abund.glm <- glmer(total_seednum ~ block+treatment+(1|plot), data=abundanalysis, family = poisson)
 
 ##b)plot residuals to look at homogeneity
-abund.res <- resid(abund.glm)
+abund.res <- resid(abund.glm) #pearson or deviance?
 abund.pred <- predict(abund.glm)
+# abund.pred_count <- exp(predict(abund.glm))
+# r_test <- abundanalysis$total_seednum-abund.pred_count
+# plot(r_test, abund.res)
 
 plot(abund.pred, abund.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
 abline(0, 0) 
 
 ##c)plot histogram and Q-Q plot to look at normality
-qqnorm(abundanalysis$total_seednum)
-qqline(abundanalysis$total_seednum, col = 'red')
+qqnorm(abund.res)
+qqline(abund.res, col = 'red')
 
 #the above text produces a Normal Quantile Plot and this indicates that the data is not normally distributed as the points do not line up exactly on the line.  In this case it is better to use non-parametric methods for testing.
 hist(abund.res)
+#skewed left (check)
 
 ##d) summary of data
 anova(abund.glm, test= "F")
 summary(abund.glm)
 
-
 ##e) getting p-values
 #find Tukeys (HSD) and use for this data
 #if p-value is greater than 0.05, don't need to do HSD
 lsmeans(abund.glm, "treatment", contr= "pairwise")
+
+#use for finding z scores for info below
+summary(glht(abund.glm, mcp(treatment="Tukey")))
+
 #These p-values are not t-based p-values that account for df but you can get those by using the code below:
 
 #ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
 
-#contrast for hial-pema (-0.343)
-ptukey(abs(-0.343)*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for hial-pema (-0.344)
+ptukey(abs(-0.344)*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.985
 
 #contrast for hial-viko (-0.163)
 ptukey(abs(-0.163)*sqrt(2), nmeans= 4, df=8, lower = F)
 #= 0.998
 
-#contrast for hial-vogu (2.247)
-ptukey(2.247*sqrt(2), nmeans= 4, df=8, lower = F)
-#=0.19
+#contrast for hial-vogu (2.25)
+ptukey(2.25*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.189
 
 #contrast for viko-pema (0.181)
 ptukey(0.181*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.9977
 
-#contrast for vogu-pema (2.558)
-ptukey(2.558*sqrt(2), nmeans= 4, df=8, lower = F)
-#= 0.124
+#contrast for vogu-pema (2.561)
+ptukey(2.561*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.123
 
-#contrast for viko-vogu (2.394)
-ptukey(2.394*sqrt(2), nmeans= 4, df=8, lower = F)
-#=0.1556
+#contrast for viko-vogu (2.398)
+ptukey(2.398*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.154
 
 ####Have not figured out how to more efficiently export output and do a conversion.
 temp <- lsmeans(abund.glm, "treatment", contr= "pairwise")
