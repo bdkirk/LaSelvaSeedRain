@@ -10,7 +10,7 @@ library(readxl); library(plyr); library(ggplot2); library(reshape2); library(bas
 #bring in original data file with overstory species removed that has been cut to the specific dates
 setwd("Data/TidyData")
 
-seeddiv <- read.csv("yearsub_no_trtsp.csv")
+seeddiv <- read.csv("yearsub_no_trtsp_nw.csv")
 
 #summarise the data by plot
 plotsum <- ddply(seeddiv, .(plot, species), summarise, seednum=sum(total_seednum))
@@ -28,9 +28,9 @@ div_data[is.na(div_data)] <- 0
 
 #####add in columns for richness, evenness and shannon-wiener diversity
 x <- div_data[,1]
-y <- div_data[,2:124]
+y <- div_data[,2:119]
 
-
+str(div_data)
 #calculating diversity indices
 y$richness <- specnumber(y)
 
@@ -42,7 +42,7 @@ y$evenness <- (y$diversity/(log(y$richness)))
 y$divnorm <- exp(diversity(y, index = "shannon"))
 
 #bind x and y back together
-div_data2 <- cbind(x, y[,124:127])
+div_data2 <- cbind(x, y[,119:122])
 tail(div_data2)
 
 #change name for X column
@@ -52,9 +52,8 @@ names(div_data2)[names(div_data2) == "x"] <- "plot"
 div_data3 <- separate(div_data2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 
 #create csv file that can be used to do NMDS calculations
-write.csv(div_data3, "div_sub_notrtsp.csv", row.names = FALSE)
+write.csv(div_data3, "div_sub_notrtsp_nw.csv", row.names = FALSE)
 
-# NEED to manually add in block and treatment
 
 #finished on 21 May 2017
 #After meeting with Dr. Dixon on 30 June decided to not use the normalized data for the analysis because through the analysis it will be normalized anyway.
@@ -64,3 +63,5 @@ write.csv(div_data3, "div_sub_notrtsp.csv", row.names = FALSE)
 #data reran on 24 Jan 18 because names were updated.
 
 # Rewrote data on 2 Feb 18 so I could add in treatment and block
+
+# Rewrote data on 12 Feb 18 to remove non-woody species
