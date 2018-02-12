@@ -3,7 +3,7 @@
 #tidy file completed on 2 April 2017
 
 #Load libraries
-library(readxl); library(plyr); library(ggplot2); library(reshape2); library(base)
+library(readxl); library(plyr); library(ggplot2); library(reshape2); library(base); library(dplyr)
 
 #set working directory to folder
 setwd("Data/RawData")
@@ -41,12 +41,16 @@ levels(seedrain$species)<-gsub("papilosa", "papillosa", levels(seedrain$species)
 levels(seedrain$species)<-gsub("conostegia crenula", "clidemia crenulata", levels(seedrain$species))
 levels(seedrain$species) <- gsub("aerugynosa", "aeruginosa", levels(seedrain$species))
 levels(seedrain$species) <- gsub("brosimun", "brosimum", levels(seedrain$species))
+levels(seedrain$species)<-gsub("senna papilosa", "senna papillosa", levels(seedrain$species))
+levels(seedrain$species)<-gsub("rollinia pittierii", "annona papilionella", levels(seedrain$species))
+levels(seedrain$species)<-gsub("paullinia cf. fasciculata", "paullinia fasciculata", levels(seedrain$species)) #c.f. means that it resembles this species.  I will assume this will be enough for the analyses because it is a distinct species.
 
 #check to see what species names are now
 levels(seedrain$species)
 
 ## Export part of seed rain data to allow for look at differences between fruit and seed.
 ## pound out when not needing to export
+#corrections have been made since this was last looked at
 #write.csv(seedrain, "fos_sr.csv")
 
 #Add in small seed final
@@ -68,7 +72,7 @@ levels(seedrain_new$species)
 #Change incorrect species names
 levels(seedrain_new$species)<-gsub("adelobotrys adcendens", "adelobotrys adscendens", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("clidemia crenula", "clidemia crenulata", levels(seedrain_new$species))
-levels(seedrain_new$species)<-gsub("foresteronia myriantha", "Forsteronia myriantha", levels(seedrain_new$species))
+levels(seedrain_new$species)<-gsub("foresteronia myriantha", "forsteronia myriantha", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("hamelia xenocarpa", "hamelia xerocarpa", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("pyramidatha", "pyramidata", levels(seedrain_new$species))
 levels(seedrain_new$species)<-gsub("warczewiczia", "warszewiczia", levels(seedrain_new$species))
@@ -200,7 +204,7 @@ seedrain_all <- merge(seedrain_all, seed_rain_unique, by=c("date", "trap"), all.
 #check to see which date-trap combos are missing. Check these to see if they were actually collected, but not in database because no seeds were found. 
 date_trap<-as.data.frame(with(seedrain, table(date, trap)))
 date_trap[date_trap$Freq==0 & date_trap$date != "2014-01-21" & date_trap$date!= "2014-01-20",]
-#Fixed the above issue with dates on 11 Mar 17
+#Fixed the above issue with dates on 11 Mar 17. It will show 0 rows.
 
 ##########################################
 #add in plot column to identify the 15 different plots
@@ -247,6 +251,7 @@ seedrain_all$min <- NULL
 #remove rows that have unknown species, called desconocido
 #also remove rows for species that are not woody: Heterocondylus vitalbae, Witheringia asterotricha, Solanum volubile, and Piper arcteacuminatum
 # this will be done manually in excel 2-11-18
+
 
 #make columns appropriate variable
 seedrain_all$block <-as.factor(seedrain_all$block)
