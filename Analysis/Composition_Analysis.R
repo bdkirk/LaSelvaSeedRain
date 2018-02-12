@@ -39,14 +39,14 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
 
 # Using Bray-Curtis dissimilarity index
 #Get data
-compdata <- read.csv("comp_sub_notrtsp.csv")
+compdata <- read.csv("comp_sub_notrtsp_nw.csv")
 
 ncol(compdata)
 str(compdata[,1:10])
 compdata$block <- as.factor(compdata$block)
 
 #get only the species data from the compdata file
-seed_comp <- compdata[,4:126]
+seed_comp <- compdata[,4:121]
 
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
 seedcomp.bc <- vegdist(seed_comp, method = "bray", binary = FALSE)
@@ -118,18 +118,18 @@ nmsplot(seedcomp.mds2, compdata$treatment, "hial", "pema", "viko", "vogu",
 ###### Presence/Absence data #####
 
 #Get data
-compdata_j <- read.csv("comp_sub_notrtsp.csv")
+compdata_j <- read.csv("comp_sub_notrtsp_nw.csv")
 
 ncol(compdata_j)
 str(compdata_j[,1:10])
 compdata_j$block <- as.factor(compdata$block)
 
 #get only the species data from the compdata file
-seed_comp_j <- compdata_j[,4:126]
+seed_comp_j <- compdata_j[,4:121]
 
 #Turn this data into binary code to verify if vegdist does that
 #Don't need to use binary, just select binary=true
-#binary <- decostand(seed_comp_j, method = "pa")
+binary <- decostand(seed_comp_j, method = "pa")
 
 # Try using jaccard vegdist without binary and with binary and then do the same with the regular data set
 
@@ -147,7 +147,7 @@ seed_comp_j <- compdata_j[,4:126]
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
 seedcomp.jc <- vegdist(seed_comp_j, method = "jaccard", binary = TRUE)
 seedcomp.jc
-#### These results are comprable to (0.46) and were checked with above code.  It is safe to not convert to binary until vegdist.
+#### These results are comprable to (0.43) and were checked with above code.  It is safe to not convert to binary until vegdist.
 
 #seedcomp.jc.f <- vegdist(seed_comp_j, method= "jaccard", binary = FALSE)
 #seedcomp.jc.f
@@ -171,9 +171,14 @@ seedcompj.mds <- metaMDS(binary, autotransform = F, expand = F, k = 2, try = 100
 seedcompj.mds$stress
 str(seedcompj.mds)
 
+#seedcompj.mds_test <- metaMDS(seed_comp_j, autotransform = F, expand = F, k=2, try = 100) #this does not capture the p/a aspect
+
 #look at str(seedcompj.mds) to look at differences in the values.
 
 #Ordination
 nmsplot(seedcompj.mds, compdata_j$treatment, "hial", "pema", "viko", "vogu",
         "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
 ##These need to be in the order they are in the file.
+#nmsplot(seedcompj.mds_test, compdata_j$treatment, "hial", "pema", "viko", "vogu",
+      #  "topright", c("HIAL", "PEMA", "VIKO", "VOGU")) #this does not capture the p/a
+
