@@ -10,7 +10,7 @@ library(readr); library(plyr); library(ggplot2); library(reshape2); library(base
 setwd("Data/TidyData")
 
 #This is file with the years worth of data that has been subsetted and no canopy species were included in seedrain
-seedcomp<- read.csv("yearsub_no_trtsp.csv")
+seedcomp<- read.csv("yearsub_no_trtsp_nw.csv")
 
 #summarise the data by plot
 plotsum <- ddply(seedcomp, .(plot, species), summarise, seednum=sum(total_seednum))
@@ -30,7 +30,9 @@ species_comp[is.na(species_comp)] <- 0
 species_comp2 <- separate(species_comp, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 
 #create csv file that can be used to do NMDS calculations
-write.csv(species_comp2, "comp_sub_notrtsp.csv", row.names = FALSE)
+write.csv(species_comp2, "comp_sub_notrtsp_nw.csv", row.names = FALSE)
 
 #Finished on 12 May 17
 # found separate function that adds in block and treatment rather than doing it manually.
+
+#rewrote on 2/12/18 to remove non-woody species and to make other spelling edits.
