@@ -11,7 +11,15 @@ library(readr); library(plyr); library(ggplot2); library(reshape2); library(tidy
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
 #naming datafile seedrain from excel file
-abundance <- read.csv("yearsub_no_trtsp.csv")
+abundance <- read.csv("yearsub_no_trtsp_nw.csv")
+
+#sums up by treatment, block and species to look at what's going on within each block and treatment combo
+block_abund <- ddply(abundance, .(treatment, block, species), summarise, seednum=sum(total_seednum))
+write.csv(block_abund, "trt_blk_spp_abund.csv", row.names= FALSE)
+
+#sums up by treatment, block, trap, species
+trap_abund <- ddply(abundance, .(treatment, block, trap, species), summarise, seednum=sum(total_seednum))
+write.csv(trap_abund, "trt_blk_trap_spp_abund.csv", row.names = FALSE)
 
 #This sums up the plots according to species for abundance calculations
 str(abundance)
@@ -20,7 +28,7 @@ abund <- ddply(abundance, .(plot), summarise, total_seednum=sum(total_seednum))
 #add in columns for block and treatment
 abund2 <- separate(abund, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 
-write.csv (abund2, "abund_sub_notrtsp.csv", row.names = FALSE)
+write.csv (abund2, "abund_sub_notrtsp_nw.csv", row.names = FALSE)
 # finished on 15 May 2017
 
 #get data for summary table
@@ -34,7 +42,7 @@ abund_summary <- spread(seedrain_treatment, treatment, seednum)
 
 #add in zeros for NA
 abund_summary[is.na(abund_summary)] <- 0
-#this works but will not change the column/unkowns to zero
+#this works but will not change the column/unknowns to zero
 
 
 #add seeds per m2/year to table
@@ -50,9 +58,12 @@ abund_summary$Pema_R <- (abund_summary$Pema)/(10.4)
 abund_summary$Viko_R <- (abund_summary$Viko)/(10.4)
 abund_summary$Vogu_R <- (abund_summary$Vogu)/(7.8)
 abund_summary$spp_total <- abund_summary$Hial+abund_summary$Pema + abund_summary$Viko + abund_summary$Vogu
-write.csv(abund_summary, "abund_summary_year_notrtsp.csv", row.names=FALSE)
+write.csv(abund_summary, "abund_summary_year_notrtsp_nw.csv", row.names=FALSE)
 
 #####Notes
 # Redone on 22 Jan 18 because names needed to be changed.
 
 # redone on 2 Feb 18 to add in columns for block and treatment
+
+# redone on 12 Feb 18 to correct species names that were not corrected and removed three woody species.
+
