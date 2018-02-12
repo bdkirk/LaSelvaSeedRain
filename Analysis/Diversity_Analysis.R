@@ -5,11 +5,11 @@
 ################################# Richness ############################
 ######################################################################
 # Load libraries
-library(ggplot2); library(car); library(lsmeans); library(stats)
+library(ggplot2); library(car); library(lsmeans); library(stats);library(multcomp); library(lme4)
 
 #bring in data
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
-divanalysis <- read.csv("div_sub_notrtsp.csv")
+divanalysis <- read.csv("div_sub_notrtsp_nw.csv")
 
 tail(divanalysis)
 str(divanalysis)
@@ -133,8 +133,8 @@ abline(0, 0)
 hist(rich.res)
 
 #check for normality with q-qplot
-qqnorm(divanalysis$richness)
-qqline(divanalysis$richness, col = 'red')
+qqnorm(rich.res)
+qqline(rich.res, col = 'red')
 
 ##d) summary of data
 summary(richnessmod1)
@@ -144,34 +144,35 @@ anova(richnessmod1, test= "F")
 lsmeans(richnessmod1, "treatment", contr= "pairwise")
 #These p-values are not t-based p-values that account for df but you can get those by using the code below:
 
+#use for finding z scores for info below
+summary(glht(richnessmod1, mcp(treatment="Tukey")))
+
 #ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
 #IMPORTANT: need to use abs(zscore) for negative values.
 
-#contrast for hial-pema (3.465)
-ptukey((3.465*sqrt(2)), nmeans= 4, df=8, lower = F)
-#=0.0346
+#contrast for hial-pema (3.264) with K.R. method (-3.264)
+ptukey((abs(-3.264)*sqrt(2)), nmeans= 4, df=8, lower = F)
+#=0.0458
 
-#contrast for hial-viko (0.311)
-ptukey(0.311*sqrt(2), nmeans= 4, df=8, lower = F)
-#=0.9888
+#contrast for hial-viko (0.311) with K.R. method (-0.209)
+ptukey(abs(-0.209)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.9965
 
-#contrast for hial-vogu (-0.092)
-ptukey(abs(-0.092)*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for hial-vogu (-0.092) with K.R. method (0.057)
+ptukey(abs(-0.057)*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.999
 
-#contrast for viko-pema (-3.163)
-ptukey(abs(-3.163)*sqrt(2), nmeans= 4, df=8, lower = F)
-#= 0.0528
+#contrast for viko-pema (-3.163) with K.R. method 3.061
+ptukey(abs(-3.061)*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.0610
 
-#contrast for vogu-pema (-3.266)
-ptukey(abs(-3.266)*sqrt(2), nmeans= 4, df=8, lower = F)
-#= 0.0457
+#contrast for vogu-pema (-3.266) with K.R. method 3.049
+ptukey(3.049*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.062
 
-#contrast for viko-vogu (-0.372)
-ptukey(abs(-0.372)*sqrt(2), nmeans= 4, df=8, lower = F)
-#=0.981
-
-
+#contrast for viko-vogu (-0.372) with K.R. method 0.245
+ptukey(abs(-0.245)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.994
 
 
 ################################################################################
@@ -302,8 +303,8 @@ abline(0, 0)
 hist(div.res)
 
 #check for normality with q-qplot
-qqnorm(divanalysis$diversity)
-qqline(divanalysis$diversity, col = 'red')
+qqnorm(div.res)
+qqline(div.res, col = 'red')
 
 ##d) summary of analysis
 summary(diversitymod1)
@@ -443,8 +444,8 @@ abline(0, 0)
 ##c)plot histogram and Q-Q plot to look at normality
 hist(even.res) #This histogram has a normal distribution
 
-qqnorm(divanalysis$evenness)
-qqline(divanalysis$evenness, col = 'red')
+qqnorm(even.res)
+qqline(even.res, col = 'red')
 
 ##d) model summary analysis
 summary(evennessmod1)
@@ -452,3 +453,4 @@ anova(evennessmod1, test="F") #should not use if unbalanced
 
 ##e) p-values
 lsmeans(evennessmod1, "treatment", contr= "pairwise")
+#not significant
