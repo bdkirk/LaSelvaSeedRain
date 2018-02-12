@@ -40,6 +40,7 @@ levels(seedrain$species)<- gsub("sapindioides", "sapindoides", levels(seedrain$s
 levels(seedrain$species)<-gsub("papilosa", "papillosa", levels(seedrain$species))
 levels(seedrain$species)<-gsub("conostegia crenula", "clidemia crenulata", levels(seedrain$species))
 levels(seedrain$species) <- gsub("aerugynosa", "aeruginosa", levels(seedrain$species))
+levels(seedrain$species) <- gsub("brosimun", "brosimum", levels(seedrain$species))
 
 #check to see what species names are now
 levels(seedrain$species)
@@ -244,7 +245,8 @@ seedrain_all$plot[seedrain_all$trap %in% vogu4] <- "vogu4"
 seedrain_all$min <- NULL
 
 #remove rows that have unknown species, called desconocido
-#did this manually in excel
+#also remove rows for species that are not woody: Heterocondylus vitalbae, Witheringia asterotricha, Solanum volubile, and Piper arcteacuminatum
+# this will be done manually in excel 2-11-18
 
 #make columns appropriate variable
 seedrain_all$block <-as.factor(seedrain_all$block)
@@ -283,7 +285,7 @@ summary(removed_sub$date)
 
 #Write as a new csv for the subset with removed canopy
 write.csv(removed_sub, "yearsub_no_trtsp.csv", row.names = FALSE)
-
+#if rewrite be sure to remove four non-woody species: Heterocondylus vitalbae, Witheringia asterotricha, Solanum volubile, and Piper arcteacuminatum
 
 #all files were written 5 April 2017
 #Then they were rewritten 6 April 2017
@@ -291,4 +293,4 @@ write.csv(removed_sub, "yearsub_no_trtsp.csv", row.names = FALSE)
 # Files were rewritten again after confirmation from Ricardo that two species with no seeds recorded had seeds that were not ready to germinate.
 
 #Files rewritten again and updated on 15 Jan 18.  Added one species name which needed to be changed. See github notes.  Rewritten again on 22 Jan 18.
-
+# Brosimun needed to be changed to Brosimum. 2-11-18
