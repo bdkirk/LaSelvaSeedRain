@@ -6,7 +6,7 @@
 library(readxl); library(plyr); library(ggplot2); library(reshape2); library(base); library(dplyr)
 
 #set working directory to folder
-setwd("Data/RawData")
+setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/RawData")
 
 #naming datafile seedrain from excel file and pulling data from sheet 4
 seedrain <-read_excel("Lluvia de semillas_RBA_20Apr15_bk_15Jan18.xlsx", sheet=4, col_names=TRUE, na= "NA")
@@ -44,6 +44,7 @@ levels(seedrain$species) <- gsub("brosimun", "brosimum", levels(seedrain$species
 levels(seedrain$species)<-gsub("senna papilosa", "senna papillosa", levels(seedrain$species))
 levels(seedrain$species)<-gsub("rollinia pittierii", "annona papilionella", levels(seedrain$species))
 levels(seedrain$species)<-gsub("paullinia cf. fasciculata", "paullinia fasciculata", levels(seedrain$species)) #c.f. means that it resembles this species.  I will assume this will be enough for the analyses because it is a distinct species.
+levels(seedrain$species)<-gsub("siparuna paucifolia", "siparuna pauciflora", levels(seedrain$species))
 
 #check to see what species names are now
 levels(seedrain$species)
@@ -252,7 +253,6 @@ seedrain_all$min <- NULL
 #also remove rows for species that are not woody: Heterocondylus vitalbae, Witheringia asterotricha, Solanum volubile, and Piper arcteacuminatum
 # this will be done manually in excel 2-11-18
 
-
 #make columns appropriate variable
 seedrain_all$block <-as.factor(seedrain_all$block)
 seedrain_all$meshtype <- as.factor(seedrain_all$meshtype)
@@ -266,7 +266,7 @@ setwd("../")
 setwd("TidyData")
 
 #This file contains all the original data including overstory species
-write.csv(seedrain_all, "seedrain_all_tidy.csv", row.names = FALSE)
+write.csv(seedrain_all, "seedrain_all_tidy_nw.csv", row.names = FALSE)
 
 
 ##create csv file for data without overstory species included####
@@ -274,7 +274,7 @@ write.csv(seedrain_all, "seedrain_all_tidy.csv", row.names = FALSE)
 removed_species <- seedrain_all[-which(seedrain_all$species%in%c("hieronyma alchorneoides", "pentaclethra macroloba", "virola koschnyi", "vochysia guatemalensis")),]
 
 #write this as a csv file and export it as a unique dataset
-write.csv(removed_species, "seedrain_notrtsp_tidy.csv", row.names = FALSE)
+write.csv(removed_species, "seedrain_notrtsp_tidy_nw.csv", row.names = FALSE)
 
 #######creating a subset of data for one years worth of data
 # Decided to clip off the first month and the last month because were getting used to data collection the first month and were rushing in the last month
@@ -289,7 +289,7 @@ summary(removed_sub$date)
 ###HAHAH it worked. And what R!!!
 
 #Write as a new csv for the subset with removed canopy
-write.csv(removed_sub, "yearsub_no_trtsp.csv", row.names = FALSE)
+write.csv(removed_sub, "yearsub_no_trtsp_nw.csv", row.names = FALSE)
 #if rewrite be sure to remove four non-woody species: Heterocondylus vitalbae, Witheringia asterotricha, Solanum volubile, and Piper arcteacuminatum
 
 #all files were written 5 April 2017
@@ -299,3 +299,5 @@ write.csv(removed_sub, "yearsub_no_trtsp.csv", row.names = FALSE)
 
 #Files rewritten again and updated on 15 Jan 18.  Added one species name which needed to be changed. See github notes.  Rewritten again on 22 Jan 18.
 # Brosimun needed to be changed to Brosimum. 2-11-18
+
+#Files were rewritten twice on 2-12-18 because additional species had not been included
