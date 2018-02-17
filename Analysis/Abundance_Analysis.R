@@ -113,7 +113,7 @@ vif(glm(total_seednum~ treatment +block, data = abundanalysis))
 #d.	Homogeneity of variance? (Step 2)
 #Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
 # i.	Plot response against each predictor and random effect. 
-ggplot(abundanalysis, aes(treatment, total_seednum, color=block))+
+ggplot(abundanalysis, aes(block, total_seednum, color=treatment))+
   geom_boxplot()
 #more variance with Hial, minimal variance with vogu. pema and viko have a similar variance.
 
