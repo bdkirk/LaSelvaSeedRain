@@ -41,7 +41,7 @@ pss_ecology <- left_join(pss, ecology, by = "species")
 str(pss_ecology)
 pss_ecology$species <- as.factor(pss_ecology$species)
 pss_ecology$family <- as.factor(pss_ecology$family)
-
+pss_ecology <- pss_ecology[complete.cases(pss_ecology),]
 #########################################################################
 
 # 1) How many adults were found in the experimental plot out of the 118 species?  
@@ -49,14 +49,27 @@ pss_ecology$family <- as.factor(pss_ecology$family)
 summary(pss_ecology)
 # 61 yes and 57 no
 
-# create subset to look at species that came in 
+# find the number of families
+count(pss_ecology$family) #40
 
+# create subset to look at species that came in 
 pss_no <- filter(pss_ecology, adult =="n")
 pss_yes <- filter(pss_ecology, adult =="y")
 
 summary(pss_no)
 summary(pss_yes)
 
+# What is the abundance of animal seeds that are being brought in relative to wind dispersed seeds. Does it vary based on treatment?
+pss_no_animal <- filter(pss_no, dispersal =="animal")
+#pss_no_animal_abund <- ddply(pss_no_animal, .())
+
+# What family has the greatest abundance of seed rain?
+pss_ecology2 <- subset(pss_ecology, select= c(1:5))
+pss_ecology3 <- melt(pss_ecology2, id.vars= c("species"), value=seednum)
+
+pss_ecology3$family <- pss_ecology$family[match(pss_ecology$species, pss_ecology3$species)]
+
+pss_ecology4 <- ddply(pss_ecology3, .(family), summarise, seednum=sum(value))
 
 # 2) Are they unique to a particular treatment?
 
