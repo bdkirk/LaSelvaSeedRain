@@ -20,9 +20,9 @@ plotsum <- ddply(seedcomp, .(plot, species), summarise, seednum=sum(total_seednu
 #dcast makes this long data go wide.  You specify the dcast(datafile, columns + you  + want + to + stay + long ~column you want to go wide, value.var="column you want to be the variable")
 species_comp <- dcast(plotsum, plot ~ species, value.var="seednum")
 #This sorts the data after it is created
-species_comp <- species_comp[,c(names(species_comp)[1],sort(names(species_comp)[2:ncol(species_comp)]))]
+#species_comp <- species_comp[,c(names(species_comp)[1],sort(names(species_comp)[2:ncol(species_comp)]))]
 #identifies all seed rain species that are NA
-species_comp <- species_comp[, -which(names(species_comp)=="NA")]
+#species_comp <- species_comp[, -which(names(species_comp)=="NA")]
 #Replace NA's with zeros
 species_comp[is.na(species_comp)] <- 0
 
@@ -36,3 +36,5 @@ write.csv(species_comp2, "comp_sub_notrtsp_nw.csv", row.names = FALSE)
 # found separate function that adds in block and treatment rather than doing it manually.
 
 #rewrote on 2/12/18 to remove non-woody species and to make other spelling edits.
+
+# reran on 3/3/18 to allow for treatment species seeds to be included in other plots

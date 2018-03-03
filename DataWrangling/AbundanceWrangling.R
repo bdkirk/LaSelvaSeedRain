@@ -31,7 +31,12 @@ abund2 <- separate(abund, col=plot, into=c("treatment", "block"), remove=F, sep=
 write.csv (abund2, "abund_sub_notrtsp_nw.csv", row.names = FALSE)
 # finished on 15 May 2017
 
-#get data for summary table
+### Add in mean, sd and se for figure in sigmaplot 26 Feb 18 ####
+abund3 <- ddply(abund2, c("treatment"), summarise, mean=mean(total_seednum), sd= sd(total_seednum), SE = (sd(total_seednum)/sqrt(length(total_seednum))))
+
+write.csv(abund3, "abund_sd_se_nw.csv")
+
+#### get data for summary table ####
 
 ##check to see how many species should actually be in summary table 
 seedrain_plot <- ddply(abundance, .(plot, species), summarise, seednum=sum(total_seednum))
@@ -47,12 +52,6 @@ abund_summary[is.na(abund_summary)] <- 0
 
 #add seeds per m2/year to table
 #a) first add in other columns
-abund_summary$Hial_R <- NA
-abund_summary$Pema_R <- NA
-abund_summary$Viko_R <- NA
-abund_summary$Vogu_R <- NA
-
-#b) add values in.
 abund_summary$Hial_R <- (abund_summary$Hial)/(10.4)
 abund_summary$Pema_R <- (abund_summary$Pema)/(10.4)
 abund_summary$Viko_R <- (abund_summary$Viko)/(10.4)
@@ -67,3 +66,4 @@ write.csv(abund_summary, "abund_summary_year_notrtsp_nw.csv", row.names=FALSE)
 
 # redone on 12 Feb 18 to correct species names that were not corrected and removed three woody species.
 
+# redone on 3 March to have density as part of the analysis

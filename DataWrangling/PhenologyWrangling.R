@@ -15,7 +15,7 @@ setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 # (1) Determining individually most abundant seed species
 
 #import tidy file of seedrain species for whole 14 WITH canopy species so you can see how they compare with other species in terms of total abundance.
-pheno <- read.csv("seedrain_all_tidy.csv")
+pheno <- read.csv("seedrain_all_tidy_nw.csv")
 
 #summarise the data by plot
 phenosum <- ddply(pheno, .(plot, species), summarise, seednum=sum(total_seednum))
@@ -32,11 +32,11 @@ pheno_data <- pheno_data[, -which(names(pheno_data)=="NA")]
 pheno_data[is.na(pheno_data)] <- 0
 
 #create a tidy csv file for rank abundance of individual species
-write.csv(pheno_data, "pheno_ovsty_tidy.csv", row.names = FALSE)
+write.csv(pheno_data, "pheno_ovsty_tidy_nw.csv", row.names = FALSE)
 
 head(pheno_data)
 #do a rank abundance plot to see which seeds have the most
-x <- pheno_data[,2:134]
+x <- pheno_data[,2:133]
 y <- pheno_data[,1]
 
 rankdata <- rankabundance(x, y="y",factor="species", "plot" ,t=qt(0.975,df=14))

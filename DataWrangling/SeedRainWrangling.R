@@ -265,22 +265,37 @@ str(seedrain_all)
 setwd("../")
 setwd("TidyData")
 
+#Remove non-woody species
+seedrain_all2 <- seedrain_all[-which(seedrain_all$species%in%c("heterocondylus vitalbae", "witheringia asterotricha", "solanum volubile", "piper arcteacuminatum")),]
+
 #This file contains all the original data including overstory species
-write.csv(seedrain_all, "seedrain_all_tidy_nw.csv", row.names = FALSE)
+write.csv(seedrain_all2, "seedrain_all_tidy_nw.csv", row.names = FALSE)
 
 
 ##create csv file for data without overstory species included####
-#This removes the overstory species from the dataset 
-removed_species <- seedrain_all[-which(seedrain_all$species%in%c("hieronyma alchorneoides", "pentaclethra macroloba", "virola koschnyi", "vochysia guatemalensis")),]
+#This removes the overstory species from the dataset # Removes all treatment seeds not just the ones within the plots of that treatment
+#removed_species <- seedrain_all[-which(seedrain_all$species%in%c("hieronyma alchorneoides", "pentaclethra macroloba", "virola koschnyi", "vochysia guatemalensis")),]
+
+#See how many rows should be removed in piping or filtering (total = 369 removed)
+no_hial_sp <- filter(seedrain_all2, species== "hieronyma alchorneoides" & treatment =="Hial") # 319
+
+no_viko_sp <- filter(seedrain_all2, species== "virola koschnyi" & treatment =="Viko") # 6
+
+no_pema_sp <- filter(seedrain_all2, species== "pentaclethra macroloba" & treatment =="Pema") #17, only found in Pema
+
+no_vogu_sp <- filter(seedrain_all2, species== "vochysia guatemalensis" & treatment =="Vogu") # 27
+
+#code removes treatment species seeds of that particular treatment
+no_trt_sp <- seedrain_all2[!((seedrain_all2$species== "vochysia guatemalensis" & seedrain_all2$treatment =="Vogu")| (seedrain_all2$species== "pentaclethra macroloba" & seedrain_all2$treatment =="Pema")| (seedrain_all2$species== "virola koschnyi" & seedrain_all2$treatment =="Viko")| (seedrain_all2$species== "hieronyma alchorneoides" & seedrain_all2$treatment =="Hial")),]
 
 #write this as a csv file and export it as a unique dataset
-write.csv(removed_species, "seedrain_notrtsp_tidy_nw.csv", row.names = FALSE)
+write.csv(no_trt_sp, "seedrain_notrtsp_tidy_nw.csv", row.names = FALSE)
 
 #######creating a subset of data for one years worth of data
 # Decided to clip off the first month and the last month because were getting used to data collection the first month and were rushing in the last month
 # Will create a subset of removed_species to use
-removed_species$date <- as.character(removed_species$date)
-removed_sub <- subset(removed_species, date > "2014-02-23" & date < "2015-02-24")
+no_trt_sp$date <- as.character(no_trt_sp$date)
+removed_sub <- subset(no_trt_sp, date > "2014-02-23" & date < "2015-02-24")
 
 removed_sub$date <- as.factor(removed_sub$date)
 
@@ -290,7 +305,6 @@ summary(removed_sub$date)
 
 #Write as a new csv for the subset with removed canopy
 write.csv(removed_sub, "yearsub_no_trtsp_nw.csv", row.names = FALSE)
-#if rewrite be sure to remove four non-woody species: Heterocondylus vitalbae, Witheringia asterotricha, Solanum volubile, and Piper arcteacuminatum
 
 #all files were written 5 April 2017
 #Then they were rewritten 6 April 2017
@@ -301,3 +315,5 @@ write.csv(removed_sub, "yearsub_no_trtsp_nw.csv", row.names = FALSE)
 # Brosimun needed to be changed to Brosimum. 2-11-18
 
 #Files were rewritten twice on 2-12-18 because additional species had not been included
+
+# Files were rewritten on 3 March to include treatment species seeds that were found in other plots.

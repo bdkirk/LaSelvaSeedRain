@@ -11,7 +11,7 @@ library(dplyr); library(plyr); library(vegan); library(tidyr)
 #Set wd
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 #bring in datafile
-mesh_abund <- read.csv("yearsub_no_trtsp.csv")
+mesh_abund <- read.csv("yearsub_no_trtsp_nw.csv")
 
 #summarise to the trap level
 sum_trap <- ddply(mesh_abund, .(trap), summarise, seednum=sum(total_seednum))
@@ -37,7 +37,7 @@ library(readxl); library(plyr); library(ggplot2); library(reshape2); library(bas
 setwd("Data/TidyData")
 
 #bring in data
-meshdiv <- read.csv("yearsub_no_trtsp.csv")
+meshdiv <- read.csv("yearsub_no_trtsp_nw.csv")
 
 #summarise by plot
 trapsum <- ddply(meshdiv, .(trap, species), summarise, seednum=sum(total_seednum))
@@ -47,7 +47,7 @@ meshdiv_data <- dcast(trapsum, trap ~ species, value.var="seednum")
 #This sorts the data after it is created
 meshdiv_data <- meshdiv_data[,c(names(meshdiv_data)[1],sort(names(meshdiv_data)[2:ncol(meshdiv_data)]))]
 #identifies all seed rain species that are NA
-meshdiv_data <- meshdiv_data[, -which(names(meshdiv_data)=="NA")]
+#meshdiv_data <- meshdiv_data[, -which(names(meshdiv_data)=="NA")]
 #Replace NA's with zeros
 meshdiv_data[is.na(meshdiv_data)] <- 0
 
@@ -57,7 +57,7 @@ meshdiv_data$trap <- as.factor(meshdiv_data$trap)
 
 #####add in columns for richness, evenness and shannon-wiener diversity
 x <- meshdiv_data[,1]
-y <- meshdiv_data[,2:124]
+y <- meshdiv_data[,2:122]
 
 
 #calculating diversity indices
@@ -71,7 +71,7 @@ y$evenness <- (y$diversity/(log(y$richness)))
 y$divnorm <- exp(diversity(y, index = "shannon"))
 
 #bind x and y back together
-meshdiv_data2 <- cbind(x, y[,124:127])
+meshdiv_data2 <- cbind(x, y[,122:125])
 tail(meshdiv_data2)
 
 #assigning canopy species, block and meshtype to a particular trap number
@@ -92,7 +92,7 @@ write.csv(meshdiv_data3, "mesh_div_analysis.csv", row.names = FALSE)
 
 ######### Composition ########
 #bring in data
-meshcomp <- read.csv("yearsub_no_trtsp.csv")
+meshcomp <- read.csv("yearsub_no_trtsp_nw.csv")
 
 #summarise by plot
 trapsum <- ddply(meshcomp, .(trap, species), summarise, seednum=sum(total_seednum))
@@ -114,7 +114,7 @@ write.csv(meshcomp_data2, "mesh_comp_analysis.csv", row.names = FALSE)
 
 #### Phenology ####
 #bring in data file
-mesh_pheno <- read.csv("seedrain_all_tidy.csv")
+mesh_pheno <- read.csv("seedrain_all_tidy_nw.csv")
 
 #summarise the data by plot
 plotpheno <- ddply(mesh_pheno, .(trap, species), summarise, seednum=sum(total_seednum))

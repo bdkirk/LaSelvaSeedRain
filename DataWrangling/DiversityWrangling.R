@@ -28,7 +28,7 @@ div_data[is.na(div_data)] <- 0
 
 #####add in columns for richness, evenness and shannon-wiener diversity
 x <- div_data[,1]
-y <- div_data[,2:119]
+y <- div_data[,2:122]
 
 str(div_data)
 #calculating diversity indices
@@ -42,7 +42,7 @@ y$evenness <- (y$diversity/(log(y$richness)))
 y$divnorm <- exp(diversity(y, index = "shannon"))
 
 #bind x and y back together
-div_data2 <- cbind(x, y[,119:122])
+div_data2 <- cbind(x, y[,122:125])
 tail(div_data2)
 
 #change name for X column
@@ -65,3 +65,20 @@ write.csv(div_data3, "div_sub_notrtsp_nw.csv", row.names = FALSE)
 # Rewrote data on 2 Feb 18 so I could add in treatment and block
 
 # Rewrote data on 12 Feb 18 to remove non-woody species
+
+
+#### Create file for mean and se for sigmaplot ####
+#a) melt- this organizes data so that all variables fall in the same column as a descriptor and then the value is in the next column.
+
+# drop plot and block data.
+div_data4 <- div_data3
+div_data4$plot <- NULL
+div_data4$block <- NULL
+
+melt_div <- melt(div_data4, id.vars = c("treatment"))
+
+div_data5 <- ddply(melt_div, c("treatment", "variable"), summarise, mean=mean(value), sd= sd(value), SE = (sd(value)/sqrt(length(value))))
+
+write.csv(div_data5, "div_se_mean_nw.csv", row.names = FALSE)
+
+# Rewrote on 3 March to include treatment species not of that same plot
