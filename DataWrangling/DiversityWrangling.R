@@ -22,7 +22,7 @@ div_data <- dcast(plotsum, plot ~ species, value.var="seednum")
 #This sorts the data after it is created
 div_data <- div_data[,c(names(div_data)[1],sort(names(div_data)[2:ncol(div_data)]))]
 #identifies all seed rain species that are NA
-div_data <- div_data[, -which(names(div_data)=="NA")]
+#div_data <- div_data[, -which(names(div_data)=="NA")]
 #Replace NA's with zeros
 div_data[is.na(div_data)] <- 0
 
