@@ -28,8 +28,14 @@ abund <- ddply(abundance, .(plot), summarise, total_seednum=sum(total_seednum))
 #add in columns for block and treatment
 abund2 <- separate(abund, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 
-write.csv (abund2, "abund_sub_notrtsp_nw.csv", row.names = FALSE)
-# finished on 15 May 2017
+## Add in a seed density component.####
+abund2$density <- ((abund2$total_seednum)/(2.6))
+
+# these calculations should use different numbers based on the number of traps per plot so we will use 0.52 * 5 traps = 2.6 m2 and because all plots have the same number of traps, we can justify just all total seed number values by 2.6
+
+write.csv(abund2, "abund_sub_notrtsp_nw.csv", row.names=FALSE)
+
+# finished on 15 May 2017 and then on 5 March 2018
 
 ### Add in mean, sd and se for figure in sigmaplot 26 Feb 18 ####
 abund3 <- ddply(abund2, c("treatment"), summarise, mean=mean(total_seednum), sd= sd(total_seednum), SE = (sd(total_seednum)/sqrt(length(total_seednum))))
@@ -70,21 +76,7 @@ write.csv(abund_summary, "abund_summary_year_notrtsp_nw.csv", row.names=FALSE)
 # redone on 3 March to have density as part of the analysis
 
 
-## Add in a seed density component.####
-## Perhaps get two datasets (1) per plot basis to run analysis, (2) per month basis to create figure, perhaps a stacked bar with abundance for each treatment per month
-
-# 1) Per plot basis: just add density component
-
-abund_density <- abund2
-abund_density$density <- NA
-
-# these calculations should use different numbers based on the number of traps per plot so we will use 0.52 * 5 traps = 2.6 m2 and because all plots have the same number of traps, we can justify just all total seed number values by 2.6
-
-abund_density$density <- ((abund_density$total_seednum)/(2.6))
-
-write.csv(abund_density, "abund_density_sub_notrt_nw.csv", row.names=FALSE)
-
-# 2) get the monthly totals for plotting
+### get the monthly totals for plotting ####
 monthtotal <- abundance
 monthtotal$date <- as.Date(monthtotal$date, format = ("%Y-%m-%d"))
 monthtotal$month <- as.Date(cut(monthtotal$date, breaks = "month"))
@@ -131,4 +123,4 @@ month_all3$Viko_D <- (month_all3$Viko)/(10.4)
 month_all3$Vogu_D <- (month_all3$Vogu)/(7.8)
 month_all3$spp_total <- month_all3$Hial+month_all3$Pema + month_all3$Viko + month_all3$Vogu
 
-write.csv(month_all3, "month_all_sub_notrt_nw.csv", row.names=FALSE)
+write.csv(month_all3, "month_all_notrt_nw.csv", row.names=FALSE)
