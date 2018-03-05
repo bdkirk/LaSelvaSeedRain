@@ -1,9 +1,9 @@
 # Started on 12 May 2017
 # Will have a section for richness, shannon-wiener diversity and evenness
 
-#######################################################################
+
 ################################# Richness ############################
-######################################################################
+
 # Load libraries
 library(ggplot2); library(car); library(lsmeans); library(stats);library(multcomp); library(lme4)
 
@@ -56,7 +56,7 @@ ggplot(divanalysis, aes(treatment, richness, color=treatment))+
   geom_boxplot()+
   facet_grid(.~block)
 
-ggplot(divanalysis, aes(block, richness, color=treatment))+
+ggplot(divanalysis, aes(block, richness, color=block))+
   geom_boxplot()+
   facet_grid(.~treatment)
 
@@ -150,28 +150,28 @@ summary(glht(richnessmod1, mcp(treatment="Tukey")))
 #ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
 #IMPORTANT: need to use abs(zscore) for negative values.
 
-#contrast for hial-pema (3.264) with K.R. method (-3.264)
-ptukey((abs(-3.264)*sqrt(2)), nmeans= 4, df=8, lower = F)
-#=0.0458
+#contrast for hial-pema (3.244) with K.R. method (-3.264)
+ptukey((abs(-3.244)*sqrt(2)), nmeans= 4, df=8, lower = F)
+#=0.0471
 
-#contrast for hial-viko (0.311) with K.R. method (-0.209)
-ptukey(abs(-0.209)*sqrt(2), nmeans= 4, df=8, lower = F)
-#=0.9965
-
-#contrast for hial-vogu (-0.092) with K.R. method (0.057)
-ptukey(abs(-0.057)*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for hial-viko (0.311) with K.R. method (-0.104)
+ptukey(abs(-0.104)*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.999
 
-#contrast for viko-pema (-3.163) with K.R. method 3.061
-ptukey(abs(-3.061)*sqrt(2), nmeans= 4, df=8, lower = F)
-#= 0.0610
+#contrast for hial-vogu (-0.092) with K.R. method (0.211)
+ptukey(abs(-0.211)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.996
 
-#contrast for vogu-pema (-3.266) with K.R. method 3.049
-ptukey(3.049*sqrt(2), nmeans= 4, df=8, lower = F)
-#= 0.062
+#contrast for viko-pema (-3.163) with K.R. method 3.143
+ptukey(abs(-3.143)*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.0543
 
-#contrast for viko-vogu (-0.372) with K.R. method 0.245
-ptukey(abs(-0.245)*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for vogu-pema (-3.266) with K.R. method 3.184
+ptukey(3.184*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.051
+
+#contrast for viko-vogu (-0.372) with K.R. method 0.305
+ptukey(abs(-0.305)*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.994
 
 
@@ -223,7 +223,7 @@ ggplot(divanalysis, aes(treatment, diversity, color=treatment))+
   facet_grid(.~block)
 
 ###this is the better one
-ggplot(divanalysis, aes(block, diversity, color=treatment))+
+ggplot(divanalysis, aes(block, diversity, color=block))+
   geom_boxplot()+
   facet_grid(.~treatment)
 
@@ -290,6 +290,7 @@ diversitymod1<-lm(diversity~block+treatment, data=divanalysis)
 
 ##b)plot residuals to look at homogeneity
 plot(diversitymod1)
+
 div.res <- resid(diversitymod1)
 div.pred <- predict(diversitymod1)
 
@@ -367,7 +368,7 @@ ggplot(divanalysis, aes(treatment, evenness, color=treatment))+
   facet_grid(.~block)
 
 ###this is the better one
-ggplot(divanalysis, aes(block, evenness, color=treatment))+
+ggplot(divanalysis, aes(block, evenness, color=block))+
   geom_boxplot()+
   facet_grid(.~treatment)
 

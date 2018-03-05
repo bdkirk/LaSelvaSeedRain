@@ -227,31 +227,166 @@ summary(glht(abund.glm, mcp(treatment="Tukey")))
 
 #ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
 
-#contrast for hial-pema (-0.344)
-ptukey(abs(-0.344)*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for hial-pema (-0.345)
+ptukey(abs(-0.345)*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.985
 
-#contrast for hial-viko (-0.163)
-ptukey(abs(-0.163)*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for hial-viko (-0.164)
+ptukey(abs(-0.164)*sqrt(2), nmeans= 4, df=8, lower = F)
 #= 0.998
 
-#contrast for hial-vogu (2.25)
-ptukey(2.25*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for hial-vogu (2.247)
+ptukey(2.247*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.189
 
 #contrast for viko-pema (0.181)
 ptukey(0.181*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.9977
 
-#contrast for vogu-pema (2.561)
-ptukey(2.561*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for vogu-pema (2.559)
+ptukey(2.559*sqrt(2), nmeans= 4, df=8, lower = F)
 #= 0.123
 
-#contrast for viko-vogu (2.398)
-ptukey(2.398*sqrt(2), nmeans= 4, df=8, lower = F)
+#contrast for viko-vogu (2.396)
+ptukey(2.396*sqrt(2), nmeans= 4, df=8, lower = F)
 #=0.154
 
 ####Have not figured out how to more efficiently export output and do a conversion.
 temp <- lsmeans(abund.glm, "treatment", contr= "pairwise")
 
+
+
+#################################### DENSITY #######################################
+
+########### Data Exploration for specific analysis#########
+##a.  Outliers in Y / Outliers in X (Step 1)
+#i.	plot response and predictors to check for outliers  (only with continuous data)
+#1.	Use Mydotplot or dotplot or boxplot, identify outliers
+hist(abundanalysis$density)
+boxplot(abundanalysis$density~ abundanalysis$treatment, xlab="treatment", ylab="Seed density", main= "Seed abundance per treatment")
+
+#No difference found when looking at logsum of abundance.
+#boxplot(abundanalysis$logsum~ abundanalysis$treatment, xlab="treatment", ylab="seednum") #large controversy about whether to use log or not but generally, you do not use log for count data.
+
+#Much more variance in hial
+#one outlier in Y, hial 2 but will keep, X is categorical
+
+##b.	Examine Zero inflation Y (Step 4)
+#Not applicable for abundance question because there are no zeros when summed to the plot level and response is continuous (>0)
+
+##c.	Collinearity X: correlation between covariates (Step 5)
+#i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
+with(abundanalysis, table(treatment, density))
+
+#Missing one plot, vogu1.
+##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
+#check variance inflation factor
+vif(glm(density~ treatment +block, data = abundanalysis))
+
+# model shows interactions when include the treatment*block, shows collinearity
+#vif was less than 10
+
+#d.	Homogeneity of variance? (Step 2)
+#Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
+# i.	Plot response against each predictor and random effect. 
+ggplot(abundanalysis, aes(block, density, color=treatment))+
+  geom_boxplot()
+#more variance with Hial, minimal variance with vogu. pema and viko have a similar variance.
+
+#e.	Independence Y - are Y's independent? (Step 8)
+#1.	Is there a pattern across time or space that is not incorporated in the model? 
+ggplot(abundanalysis, aes(treatment, density, color=treatment))+
+  geom_boxplot()+
+  facet_grid(.~block)
+
+#Characters are not correct for the following two lines
+#hist(abund$Dist)
+#boxplot(abund$Dist ~ abund$density)
+
+with(abund, ftable(treatment, Dist))
+#This table is not really useful in this case
+
+#More variance with block 2 and more variance with Hial 
+
+#ii. Are there other potential factors that reduce independence of Y’s? 
+#timing is the same.
+
+#f.	Sufficient data?  
+##As a rule of thumb, (all models), should have 15 to 20 observations for each parameter. So, if have 50 observations, should really only have 3 parameters. 
+# There are 15 observations with one parameter, density
+
+#i.	Do all levels of Island have adequate samples of at each level of Native? 	Examine interactions
+#Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
+with(abundanalysis, table(block, treatment))
+
+
+###########  Analysis   ###############
+
+#1) Does density of seeds differ between overstory treatments? 
+str(abundanalysis)
+abundanalysis$density <- as.integer(abundanalysis$density)
+
+##a)changed model to glmer because this will account for overdispersion with the poisson distribution.
+density.glm <- glmer(density ~ block+treatment+(1|plot), data=abundanalysis, family = poisson)
+
+##b)plot residuals to look at homogeneity
+density.res <- resid(density.glm) #pearson or deviance?
+density.pred <- predict(density.glm)
+# density.pred_count <- exp(predict(density.glm))
+# r_test <- abundanalysis$density-density.pred_count
+# plot(r_test, density.res)
+
+plot(density.pred, density.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
+abline(0, 0) 
+
+##c)plot histogram and Q-Q plot to look at normality
+qqnorm(density.res)
+qqline(density.res, col = 'red')
+
+#the above text produces a Normal Quantile Plot and this indicates that the data is not normally distributed as the points do not line up exactly on the line.  In this case it is better to use non-parametric methods for testing.
+hist(density.res)
+#skewed left (check)
+
+##d) summary of data
+anova(density.glm, test= "F")
+summary(density.glm)
+
+##e) getting p-values
+#find Tukeys (HSD) and use for this data
+#if p-value is greater than 0.05, don't need to do HSD
+lsmeans(density.glm, "treatment", contr= "pairwise")
+
+#use for finding z scores for info below
+summary(glht(density.glm, mcp(treatment="Tukey")))
+
+#These p-values are not t-based p-values that account for df but you can get those by using the code below:
+
+#ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
+
+#contrast for hial-pema (-0.345)
+ptukey(abs(-0.345)*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.985
+
+#contrast for hial-viko (-0.164)
+ptukey(abs(-0.164)*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.998
+
+#contrast for hial-vogu (2.247)
+ptukey(2.247*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.189
+
+#contrast for viko-pema (0.181)
+ptukey(0.181*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.9977
+
+#contrast for vogu-pema (2.559)
+ptukey(2.559*sqrt(2), nmeans= 4, df=8, lower = F)
+#= 0.123
+
+#contrast for viko-vogu (2.396)
+ptukey(2.396*sqrt(2), nmeans= 4, df=8, lower = F)
+#=0.154
+
+####Have not figured out how to more efficiently export output and do a conversion.
+temp <- lsmeans(density.glm, "treatment", contr= "pairwise")
 

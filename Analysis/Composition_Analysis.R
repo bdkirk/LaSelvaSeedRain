@@ -23,7 +23,7 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
   # Create plot
   plot(mod, display = 'sites', choice = c(1, 2), type = 'none')
   
-  # Add points for each group with a different color per group
+  # Add points for each group with a different color and shape per group
   points(mod$points[groupcol == g1, 1], mod$points[groupcol == g1, 2], pch = 21, bg = "#006600")
   points(mod$points[groupcol == g2, 1], mod$points[groupcol == g2, 2], pch = 22, bg = "#FF6600")
   points(mod$points[groupcol == g3, 1], mod$points[groupcol == g3, 2], pch = 23, bg = "#990066")
@@ -46,7 +46,7 @@ str(compdata[,1:10])
 compdata$block <- as.factor(compdata$block)
 
 #get only the species data from the compdata file
-seed_comp <- compdata[,4:121]
+seed_comp <- compdata[,4:124]
 
 #name new object and do the vegdist (part of vegan), this computes dissimilarity indices to use in the PERMANOVA
 seedcomp.bc <- vegdist(seed_comp, method = "bray", binary = FALSE)
@@ -69,8 +69,12 @@ seedcomp.mds$stress
 
 #Ordination
 nmsplot(seedcomp.mds, compdata$treatment, "hial", "pema", "viko", "vogu",
-        "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
+        "topright", c("Hial", "Pema", "Viko", "Vogu"))
 ##These need to be in the order they are in the file.
+
+## Use this one to check which block the plots were in.
+nmsplot(seedcomp.mds, compdata$block, "1", "2", "3", "4",
+        "topright", c("1", "2", "3", "4"))
 
 #I am not sure what this does.
 stressplot(seedcomp.mds)
@@ -96,7 +100,7 @@ NMDS.scree<-function(data_matrix, reps=3, max_factors=2) {
   
 }
 
-NMDS.scree(seed_comp, reps=3, max_factors=7)
+stressx <- NMDS.scree(seed_comp, reps=3, max_factors=7)
 #Based on this, you might use three dimensions rather than 2 dimensions
 seedcomp.mds2 <- metaMDS(seed_comp, autotransform = F, expand = F, k = 3, try = 100)
 seedcomp.mds2$stress
@@ -125,7 +129,7 @@ str(compdata_j[,1:10])
 compdata_j$block <- as.factor(compdata$block)
 
 #get only the species data from the compdata file
-seed_comp_j <- compdata_j[,4:121]
+seed_comp_j <- compdata_j[,4:124]
 
 #Turn this data into binary code to verify if vegdist does that
 #Don't need to use binary, just select binary=true
@@ -177,7 +181,10 @@ str(seedcompj.mds)
 
 #Ordination
 nmsplot(seedcompj.mds, compdata_j$treatment, "hial", "pema", "viko", "vogu",
-        "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
+        "topright", c("Hial", "Pema", "Viko", "Vogu"))
+## Use this one to check which block the plots were in.
+nmsplot(seedcompj.mds, compdata_j$block, "1", "2", "3", "4",
+        "topright", c("1", "2", "3", "4"))
 ##These need to be in the order they are in the file.
 #nmsplot(seedcompj.mds_test, compdata_j$treatment, "hial", "pema", "viko", "vogu",
       #  "topright", c("HIAL", "PEMA", "VIKO", "VOGU")) #this does not capture the p/a
