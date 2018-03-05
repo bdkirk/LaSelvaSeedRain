@@ -250,8 +250,6 @@ seedrain_all$plot[seedrain_all$trap %in% vogu4] <- "vogu4"
 seedrain_all$min <- NULL
 
 #remove rows that have unknown species, called desconocido
-#also remove rows for species that are not woody: Heterocondylus vitalbae, Witheringia asterotricha, Solanum volubile, and Piper arcteacuminatum
-# this will be done manually in excel 2-11-18
 
 #make columns appropriate variable
 seedrain_all$block <-as.factor(seedrain_all$block)
@@ -271,31 +269,55 @@ seedrain_all2 <- seedrain_all[-which(seedrain_all$species%in%c("heterocondylus v
 #This file contains all the original data including overstory species
 write.csv(seedrain_all2, "seedrain_all_tidy_nw.csv", row.names = FALSE)
 
-
+####### extra verification ########
+### Verified with code below that there are 2551 rows with no data just added to get dates correct.
+#test3 <- seedrain_all2
+#test4 <- test3[complete.cases(test3),]
 ##create csv file for data without overstory species included####
 #This removes the overstory species from the dataset # Removes all treatment seeds not just the ones within the plots of that treatment
 #removed_species <- seedrain_all[-which(seedrain_all$species%in%c("hieronyma alchorneoides", "pentaclethra macroloba", "virola koschnyi", "vochysia guatemalensis")),]
 
 #See how many rows should be removed in piping or filtering (total = 369 removed)
-no_hial_sp <- filter(seedrain_all2, species== "hieronyma alchorneoides" & treatment =="Hial") # 319
+#no_hial_sp <- filter(seedrain_all2, species== "hieronyma alchorneoides" & treatment =="Hial") # 319
 
-no_viko_sp <- filter(seedrain_all2, species== "virola koschnyi" & treatment =="Viko") # 6
+#no_viko_sp <- filter(seedrain_all2, species== "virola koschnyi" & treatment =="Viko") # 6
 
-no_pema_sp <- filter(seedrain_all2, species== "pentaclethra macroloba" & treatment =="Pema") #17, only found in Pema
+#no_pema_sp <- filter(seedrain_all2, species== "pentaclethra macroloba" & treatment =="Pema") #17, only found in Pema
 
-no_vogu_sp <- filter(seedrain_all2, species== "vochysia guatemalensis" & treatment =="Vogu") # 27
+#no_vogu_sp <- filter(seedrain_all2, species== "vochysia guatemalensis" & treatment =="Vogu") # 27
 
 #code removes treatment species seeds of that particular treatment
-no_trt_sp <- seedrain_all2[!((seedrain_all2$species== "vochysia guatemalensis" & seedrain_all2$treatment =="Vogu")| (seedrain_all2$species== "pentaclethra macroloba" & seedrain_all2$treatment =="Pema")| (seedrain_all2$species== "virola koschnyi" & seedrain_all2$treatment =="Viko")| (seedrain_all2$species== "hieronyma alchorneoides" & seedrain_all2$treatment =="Hial")),]
+#currently not working, code works but it doesn't look pretty because the 3k columns with essentially no data but a date value turn into weird NAs. This will be resolved with ddply calculations in data wrangling for specific analyses 5 March 18.
+#str(seedrain_all2)
+#seedrain_all2$species <- as.factor(seedrain_all2$species)
+#seedrain_all2$species[seedrain_all2$species == 'NA'] <- 'none'
+
+
+### below may not be in the correct order as it was cut from just below to make code look cleaner
+#no_trt_sp2 <- seedrain_all2[!(seedrain_all2$species== "hieronyma alchorneoides" & seedrain_all2$treatment =="Hial"), ]
+#no_trt_sp2[is.na(no_trt_sp2)] <- 0
+
+#test <- seedrain_all2 %>% filter(!(species == "hieronyma alchorneoides" & treatment == "Hial"),!(species == "vochysia guatemalensis" & treatment == "Vogu"), !(species == "pentaclethra macroloba" & treatment == "Pema"), !(species == "virola koschnyi" & treatment == "Viko"))
+#test1 <- seedrain_all2 %>% filter(!(species == "hieronyma alchorneoides" & treatment == "Hial"))
+
+# make a new test with complete cases
+#test <- no_trt_sp
+#test2 <- test[complete.cases(test),]
+
+###### remove conspecific treatment species #####
+no_trt_sp <- seedrain_all2[!((seedrain_all2$species== "vochysia guatemalensis" & seedrain_all2$treatment =="Vogu")| (seedrain_all2$species== "pentaclethra macroloba" & seedrain_all2$treatment =="Pema")| (seedrain_all2$species== "virola koschnyi" & seedrain_all2$treatment =="Viko")| (seedrain_all2$species== "hieronyma alchorneoides" & seedrain_all2$treatment =="Hial")), ]
+
+#remove NA rows to make dataset look cleaner
+no_trt_sp2 <- no_trt_sp[complete.cases(no_trt_sp),]
 
 #write this as a csv file and export it as a unique dataset
-write.csv(no_trt_sp, "seedrain_notrtsp_tidy_nw.csv", row.names = FALSE)
+write.csv(no_trt_sp2, "seedrain_notrtsp_tidy_nw.csv", row.names = FALSE)
 
-#######creating a subset of data for one years worth of data
+#######creating a subset of data for one years worth of data####
 # Decided to clip off the first month and the last month because were getting used to data collection the first month and were rushing in the last month
 # Will create a subset of removed_species to use
-no_trt_sp$date <- as.character(no_trt_sp$date)
-removed_sub <- subset(no_trt_sp, date > "2014-02-23" & date < "2015-02-24")
+no_trt_sp2$date <- as.character(no_trt_sp2$date)
+removed_sub2 <- subset(no_trt_sp2, date > "2014-02-23" & date < "2015-02-24")
 
 removed_sub$date <- as.factor(removed_sub$date)
 
