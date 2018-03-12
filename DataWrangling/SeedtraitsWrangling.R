@@ -32,7 +32,11 @@ levels(ecology$species)
 # check
 str(ecology)
 
-# Removed non-woody species (vines) and used 12 months of data
+# Removed non-woody species (vines), conspecific treatment seeds within treatment and used 12 months of data
+# create subset of data for other ecological analysis with both variables
+ecology2 <- subset(ecology, select= c(1:3))
+setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
+write.csv(ecology2, "ecoraw_tidy.csv", row.names = FALSE)
 
 #A) create separate files for dispersal mode and life form to work on analyses
 
@@ -44,6 +48,7 @@ str(dispersal_mode)
 life_form <- subset(ecology, select= c(1, 2))
 str(life_form)
 
+ecology_all <- full_join(dispersal_mode, life_form, by = "species")
 ############################################################################
 # B) bring in other files to combine to look at diversity, richness, and abundance
 
@@ -60,6 +65,10 @@ abund2$species <- tolower(abund2$species)
 str(abund2)
 abund2$species <- as.factor(abund2$species)
 
+# export clean file with ecological parameters and species in year subset
+ecology_all2 <- right_join(ecology_all, abund2, by = "species")
+write.csv(ecology_all2, "ecology_sub_notrt_nw.csv", row.names = FALSE)
+
 #### 1) Abundance
 ###### a) Dispersal Mode
 
@@ -67,30 +76,24 @@ abund2$species <- as.factor(abund2$species)
 dis_abund <- right_join(dispersal_mode, abund2, by="species")
 # right join matches the two datasets by abund2 which has the restriction to 12 months and does not include treatment species.
 
-# removed rubiaceae and unknown row.
-dis_abund2 <- dis_abund[complete.cases(dis_abund),]
-str(dis_abund2)
-
 #change class
-dis_abund2$species <- as.factor(dis_abund2$species)
+dis_abund$species <- as.factor(dis_abund$species)
 
-dis_abund3 <- gather(dis_abund2, "treatment", "seednum", 3:6 )
+dis_abund2 <- gather(dis_abund, "treatment", "seednum", 3:6 )
 
-write.csv(dis_abund3, "seedtrait_dis_abund.csv", row.names = FALSE)
-
-d_abund <- ddply(dis_abund3, .(treatment, dispersal), summarise, seednum=sum(seednum))
+write.csv(dis_abund2, "seedtrait_dis_abund.csv", row.names = FALSE)
 
 ###### b) Lifeform
 life_abund <- right_join(life_form, abund2, by= "species")
 
-#remove NA's life forms (ficus sp, ficus sp2, rubiaceae, lauraceae and NA)
+#remove NA's life forms (ficus sp, ficus sp2, rubiaceae, and lauraceae)
 life_abund2 <- life_abund[complete.cases(life_abund),]
 
 life_abund3 <- gather(life_abund, "treatment", "seednum", 3:6)
 
 write.csv(life_abund3, "seedtrait_life_abund.csv", row.names = FALSE)
 
-l_abund <- ddply(life_abund3, .(treatment, lifeform), summarise, seednum=sum(seednum))
+
 
 #### 2) Richness
 # Need file that has species and treatment then variables (life form and dispersal mode)
@@ -116,19 +119,26 @@ species_abund3 <- right_join(species_abund2, dispersal_mode, by= "species")
 species_abund4 <- species_abund3[complete.cases(species_abund3),]
 
 #create separate files for wind, animal and mechanical.
+# Update based on LunchinatoRs presenation. To keep mech dispersed species, lump into category of biotically dispersed and abiotically dispersed. Note : 3 March 18
+
+###########################################################################
 wind_abund <- filter (species_abund4, dispersal == "wind")
 animal_abund <- filter(species_abund4, dispersal == "animal")
 mech_abund <- filter(species_abund4, dispersal =="mechanical")
+abiotic_abund <- rbind(wind_abund, mech_abund)
 
 #summarise those files
 wind_abund2 <- ddply(wind_abund, .(plot), summarise, seednum=sum(total_seednum))
 animal_abund2 <- ddply(animal_abund, .(plot), summarise, seednum=sum(total_seednum))
 mech_abund2 <- ddply(mech_abund, .(plot), summarise, seednum=sum(total_seednum))
+abiotic_abund2 <- ddply(abiotic_abund, .(plot), summarise, seednum=sum(total_seednum))
 
 #add block and treatment to those
 wind_abund3 <- separate(wind_abund2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 animal_abund3 <- separate(animal_abund2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 mech_abund3 <- separate(mech_abund2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
+abiotic_abund3 <- separate(abiotic_abund2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
+
 
 #write files to do analysis for abundance
 # change working directory if not in tidy file
@@ -136,6 +146,7 @@ mech_abund3 <- separate(mech_abund2, col=plot, into=c("treatment", "block"), rem
 write.csv(wind_abund3, "wind_abund_tidy.csv", row.names = FALSE)
 write.csv(animal_abund3, "animal_abund_tidy.csv", row.names = FALSE)
 write.csv(mech_abund3, "mech_abund_tidy.csv", row.names = FALSE)
+write.csv(abiotic_abund3, "abiotic_abund_tidy.csv", row.names = FALSE)
 
 
 ### Now work on tidy files for diversity analyses
@@ -157,7 +168,7 @@ write.csv(animal_comp_data, "animal_comp_sub_notrtsp_nw.csv", row.names = FALSE)
 
 #####add in columns for richness, evenness and shannon-wiener diversity
 x <- animal_div_data[,1]
-y <- animal_div_data[,2:101]
+y <- animal_div_data[,2:104]
 
 str(animal_div_data)
 #calculating diversity indices
@@ -169,7 +180,7 @@ y$evenness <- (y$diversity/(log(y$richness)))
 y$divnorm <- exp(diversity(y, index = "shannon"))
 
 #bind x and y back together
-animal_div_data2 <- cbind(x, y[,101:104])
+animal_div_data2 <- cbind(x, y[,104:107])
 tail(animal_div_data2)
 
 #change name for X column
@@ -200,7 +211,7 @@ write.csv(wind_comp_data, "wind_comp_sub_notrtsp_nw.csv", row.names = FALSE)
 
 #####add in columns for richness, evenness and shannon-wiener diversity
 a <- wind_div_data[,1]
-b <- wind_div_data[,2:17]
+b <- wind_div_data[,2:18]
 
 str(wind_div_data)
 
@@ -213,7 +224,7 @@ b$evenness <- (b$diversity/(log(b$richness)))
 b$divnorm <- exp(diversity(b, index = "shannon"))
 
 #bind x and y back together
-wind_div_data2 <- cbind(a, b[,17:20])
+wind_div_data2 <- cbind(a, b[,18:21])
 tail(wind_div_data2)
 
 #change name for X column
@@ -227,8 +238,50 @@ write.csv(wind_div_data3, "wind_div_sub_notrtsp_nw.csv", row.names = FALSE)
 
 
 #################
-# Not worth doing the mechanical diversity because there are too few species 
+# Not worth doing the mechanical diversity because there are too few species BUT can look at abiotic diversity
+#################################
+#2) Abiotic Diversity
+abiotic_plotsum <- ddply(abiotic_abund, .(plot, species), summarise, seednum=sum(total_seednum))
 
+####CREATING WIDE DATA###
+#Create species columns to have data in wide format
+#dcast makes this long data go wide.  You specify the dcast(datafile, columns + you  + want + to + stay + long ~column you want to go wide, value.var="column you want to be the variable")
+abiotic_div_data <- dcast(abiotic_plotsum, plot ~ species, value.var="seednum")
+
+#Replace NA's with zeros
+abiotic_div_data[is.na(abiotic_div_data)] <- 0
+
+# creating composition analysis data
+abiotic_comp_data <- separate(abiotic_div_data, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
+
+write.csv(abiotic_comp_data, "abiotic_comp_sub_notrtsp_nw.csv", row.names = FALSE)
+
+#####add in columns for richness, evenness and shannon-wiener diversity
+k <- abiotic_div_data[,1]
+l <- abiotic_div_data[,2:19]
+
+str(abiotic_div_data)
+
+#calculating diversity indices
+l$richness <- specnumber(l)
+l$diversity <- diversity(l, index = "shannon")
+l$evenness <- (l$diversity/(log(l$richness)))
+
+#change diversity to something more recognizable
+l$divnorm <- exp(diversity(l, index = "shannon"))
+
+#bind x and y back together
+abiotic_div_data2 <- cbind(k, l[,19:22])
+tail(abiotic_div_data2)
+
+#change name for X column
+names(abiotic_div_data2)[names(abiotic_div_data2) == "k"] <- "plot"
+
+#add in columns for treatment and block
+abiotic_div_data3 <- separate(abiotic_div_data2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
+
+#create csv file that can be used to do NMDS calculations
+write.csv(abiotic_div_data3, "abiotic_div_sub_notrtsp_nw.csv", row.names = FALSE)
 ###############################################################################
 ##############################################################################
 ###############################################################################
@@ -254,6 +307,12 @@ tree_abund3 <- separate(tree_abund2, col=plot, into=c("treatment", "block"), rem
 shrub_abund3 <- separate(shrub_abund2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 palm_abund3 <- separate(palm_abund2, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 
+# remove NA for plot
+liana_abund3 <- liana_abund3[complete.cases(liana_abund3),]
+tree_abund3 <- tree_abund3[complete.cases(tree_abund3),]
+shrub_abund3 <- shrub_abund3[complete.cases(shrub_abund3),]
+palm_abund3 <- palm_abund3[complete.cases(palm_abund3),]
+
 #write files to do analysis for abundance
 write.csv(liana_abund3, "liana_abund_tidy.csv", row.names = FALSE)
 write.csv(tree_abund3, "tree_abund_tidy.csv", row.names = FALSE)
@@ -275,6 +334,8 @@ liana_div_data[is.na(liana_div_data)] <- 0
 
 #writing comp file
 liana_comp_data <- separate(liana_div_data, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
+
+liana_comp_data <- liana_comp_data[complete.cases(liana_comp_data),]
 
 write.csv(liana_comp_data, "liana_comp_sub_notrtsp_nw.csv", row.names = FALSE)
 
@@ -316,14 +377,18 @@ tree_div_data <- dcast(tree_plotsum, plot ~ species, value.var="seednum")
 #Replace NA's with zeros
 tree_div_data[is.na(tree_div_data)] <- 0
 
+tree_div_data <- tree_div_data[complete.cases(tree_div_data),]
+
 #writing comp data
 tree_comp_data <- separate(tree_div_data, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
+
+tree_comp_data <- tree_comp_data[complete.cases(tree_comp_data),]
 
 write.csv(tree_comp_data, "tree_comp_sub_notrtsp_nw.csv", row.names = FALSE)
 
 #####add in columns for richness, evenness and shannon-wiener diversity
 e <- tree_div_data[,1]
-f <- tree_div_data[,2:50]
+f <- tree_div_data[,2:53]
 
 str(tree_div_data)
 
@@ -336,7 +401,7 @@ f$evenness <- (f$diversity/(log(f$richness)))
 f$divnorm <- exp(diversity(f, index = "shannon"))
 
 #bind x and y back together
-tree_div_data2 <- cbind(e, f[,50:53])
+tree_div_data2 <- cbind(e, f[,53:56])
 tail(tree_div_data2)
 
 #change name for X column
@@ -361,6 +426,8 @@ shrub_div_data <- dcast(shrub_plotsum, plot ~ species, value.var="seednum")
 #Replace NA's with zeros
 shrub_div_data[is.na(shrub_div_data)] <- 0
 
+shrub_div_data <- shrub_div_data[complete.cases(shrub_div_data),]
+
 #writing comp data
 shrub_comp_data <- separate(shrub_div_data, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
 
@@ -368,7 +435,7 @@ write.csv(shrub_comp_data, "shrub_comp_sub_notrtsp_nw.csv", row.names = FALSE)
 
 #####add in columns for richness, evenness and shannon-wiener diversity
 g <- shrub_div_data[,1]
-h <- shrub_div_data[,2:47]
+h <- shrub_div_data[,2:44]
 
 str(shrub_div_data)
 
@@ -381,7 +448,7 @@ h$evenness <- (h$diversity/(log(h$richness)))
 h$divnorm <- exp(diversity(h, index = "shannon"))
 
 #bind x and y back together
-shrub_div_data2 <- cbind(g, h[,47:50])
+shrub_div_data2 <- cbind(g, h[,44:47])
 tail(shrub_div_data2)
 
 #change name for X column
@@ -404,6 +471,8 @@ palm_div_data <- dcast(palm_plotsum, plot ~ species, value.var="seednum")
 
 #Replace NA's with zeros
 palm_div_data[is.na(palm_div_data)] <- 0
+
+palm_div_data <- palm_div_data[complete.cases(palm_div_data),]
 
 #writing comp data
 palm_comp_data <- separate(palm_div_data, col=plot, into=c("treatment", "block"), remove=F, sep= -1)
