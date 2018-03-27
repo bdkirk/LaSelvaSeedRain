@@ -158,7 +158,7 @@ hist(wind.abund.res)
 #just odd, perhaps skewed right
 
 ##d) summary of data
-anova(wind.abund.glm, test= "F")
+anova(wind.abund.glm, test= "Chi")
 summary(wind.abund.glm)
 
 ##e) getting p-values
@@ -166,6 +166,8 @@ summary(wind.abund.glm)
 
 #use for finding z scores for info below
 summary(glht(wind.abund.glm, mcp(treatment="Tukey")))
+
+1- pf(1.4454, 3, 7)
 
 #These p-values are not t-based p-values that account for df but you can get those by using the code below:
 
@@ -330,6 +332,9 @@ anova(animal.abund.glm, test= "F")
 summary(animal.abund.glm)
 
 ##e) getting p-values
+# For overall treatment effect use 1-pf (recall pf function gets lower tail and we want upper tail so subtract from 1)
+1- pf(2.5371, 3, 7) # 0.14
+
 #find Tukeys (HSD) and use for this data
 
 #use for finding z scores for info below
@@ -499,6 +504,7 @@ abiotic.abund.glm <- glmer(seednum ~ block+treatment+(1|plot), data=abiotic_a_an
 
 abiotic_resid <- resid_panel(resid(abiotic.abund.glm), fitted(abiotic.abund.glm), bins = 20)
 
+abiotic_resid
 
 ##b)plot residuals to look at homogeneity
 abiotic.abund.res <- resid(abiotic.abund.glm) #pearson or deviance?
@@ -523,6 +529,8 @@ anova(abiotic.abund.glm, test= "F")
 summary(abiotic.abund.glm)
 
 ##e) getting p-values
+# for the overall treatment use pf as described above in animal and wind
+1 - pf(2.2037, 3, 7) #0.18
 #find Tukeys (HSD) and use for this data
 
 #use for finding z scores for info below
@@ -711,6 +719,8 @@ anova(liana.abund.glm, test= "F")
 summary(liana.abund.glm)
 
 ##e) getting p-values
+# getting treatment p-value
+1- pf(3.0593, 3, 7) #0.10
 #find Tukeys (HSD) and use for this data
 
 #use for finding z scores for info below
@@ -876,6 +886,8 @@ anova(shrub.abund.glm, test= "F")
 summary(shrub.abund.glm)
 
 ##e) getting p-values
+# treatment p-value
+1 - pf(0.32, 3, 7) #0.81
 #find Tukeys (HSD) and use for this data
 
 #use for finding z scores for info below
@@ -1040,6 +1052,9 @@ anova(tree.abund.glm, test= "F")
 summary(tree.abund.glm)
 
 ##e) getting p-values
+# getting treatment p-value:
+
+1- pf(2.2195, 3, 7) # 0.17
 #find Tukeys (HSD) and use for this data
 
 #use for finding z scores for info below
