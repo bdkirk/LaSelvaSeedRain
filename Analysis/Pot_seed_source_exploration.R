@@ -20,51 +20,75 @@ psource2$species <- tolower(psource2$species)
 # bring in data on which species 
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
-seeds_sub <- read.csv("abund_summary_year_notrtsp_nw.csv", header = TRUE)
-
-#remove irrelevant rows
-seeds_sub2 <- subset(seeds_sub, select = c(1:5))
-str(seeds_sub2)
+ecology_sub <- read.csv("ecology_sub_notrt_nw.csv")
 
 #join two datasets
-pss <- left_join(seeds_sub2, psource2, by= "species")
+pss <- left_join(ecology_sub, psource2, by= "species")
 
 #remove NA row
-pss <- pss[complete.cases(pss),]
+str(pss)
 pss$adult <- as.factor(pss$adult)
+pss$family <- as.factor(pss$family)
+pss$lifeform <- as.factor(pss$lifeform)
 
-#bring in ecology
-ecology <- read.csv("seedtraits_tidy_sub_notrt_nw.csv", header = TRUE)
 
-# join two datasets
-pss_ecology <- left_join(pss, ecology, by = "species")
-str(pss_ecology)
-pss_ecology$species <- as.factor(pss_ecology$species)
-pss_ecology$family <- as.factor(pss_ecology$family)
-pss_ecology <- pss_ecology[complete.cases(pss_ecology),]
 #########################################################################
 
 # 1) How many adults were found in the experimental plot out of the 118 species?  
 
-summary(pss_ecology)
-# 61 yes and 57 no
+summary(pss)
+# 64 yes and 57 no
 
 # find the number of families
-count(pss_ecology$family) #40
+count(pss$family) #40
 
 # create subset to look at species that came in 
-pss_no <- filter(pss_ecology, adult =="n")
-pss_yes <- filter(pss_ecology, adult =="y")
+pss_no <- filter(pss, adult =="n")
+pss_yes <- filter(pss, adult =="y")
 
 summary(pss_no)
-summary(pss_yes)
+summary(pss_yes) # palms were already found within plot. no new palm species arrived...
+
+# Create figure with stacked bars for the life form and total number of species
+
+# a1) pss_no evaluation of number of species by life form
+
+# melt data so treatment is a variable
+pss_no1 <- subset(pss_no, select= c(1:7))
+pss_no2 <- melt(pss_no1, id.vars = c("species", "dispersal", "lifeform"), value=seednum)
+pss_no3 <- filter(pss_no2, value >= 1)
+pss_no_lf <- ddply(pss_no3, .(variable, lifeform), summarise, sum=(length(species)))
+
+# a2) pss_no evaluation of abundance of seeds by life form
+pss_no_lf_abund <- ddply(pss_no3, .(variable, lifeform), summarise, sum=(sum(value)))
+
+# a3) pss_no evaluation of density of seeds by life form
+   # calculated in excel by dividing by total treatment plots
+
+# Create data for figure with life form for seeds with conspecifics in plots
+
+# b1) pss_yes evaluation of number of species by life form
+
+# melt data so treatment is a variable
+pss_yes1 <- subset(pss_yes, select= c(1:7))
+pss_yes2 <- melt(pss_yes1, id.vars = c("species", "dispersal", "lifeform"), value=seednum)
+pss_yes3 <- filter(pss_yes2, value>= 1)
+pss_yes_lf <- ddply(pss_yes3, .(variable, lifeform), summarise, sum=(length(species)))
+
+# b2) pss_yes evaluation of abundance of seeds by life form
+pss_yes_lf_abund <- ddply(pss_yes3, .(variable, lifeform), summarise, sum=(sum(value)))
+
+# b3) pss_no evaluation of density of seeds by life form
+
+
+
 
 # What is the abundance of animal seeds that are being brought in relative to wind dispersed seeds. Does it vary based on treatment?
 pss_no_animal <- filter(pss_no, dispersal =="animal")
 #pss_no_animal_abund <- ddply(pss_no_animal, .())
 
 # What family has the greatest abundance of seed rain?
-pss_ecology2 <- subset(pss_ecology, select= c(1:5))
+pss_ecology2 <- subset(pss, select= c(1:5))
 pss_ecology3 <- melt(pss_ecology2, id.vars= c("species"), value=seednum)
 
 pss_ecology3$family <- pss_ecology$family[match(pss_ecology$species, pss_ecology3$species)]
