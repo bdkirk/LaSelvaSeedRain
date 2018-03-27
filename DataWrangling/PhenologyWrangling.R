@@ -118,3 +118,51 @@ ggplot(data = trt_month_seed, aes(month, seednum)) +
   stat_summary(fun.y = sum, # adds up all observations for the month
                geom = "line")+ # or "line"
   facet_wrap(~treatment, scales = "free_y")
+
+
+##################################################################################
+#  Do the same thing but without subsetting for the year but with conspecific treatment seeds removed from plots.  This will create a monthly total for the wind dispersed and animal dispersed seeds.
+
+
+month_all <- read.csv("seedrain_notrtsp_tidy_nw.csv")
+ecology <- read.csv("ecology_sub_notrt_nw.csv")
+ecology2 <- subset(ecology, select = c(1, 2))
+
+month_eco <- right_join(ecology2, month_all, by = "species")
+
+month_eco$date <- as.Date(month_eco$date, format = ("%Y-%m-%d"))
+month_eco$month <- as.Date(cut(month_eco$date, breaks = "month"))
+
+# get values for animal then get values for wind or abiotic.
+month_animal <- filter(month_eco, dispersal  == "animal")
+month_plot_animal <- ddply(month_animal, .(plot, month), summarise, seednum=sum(total_seednum)) # Not useful now. could use later if we want to go by a plot basis rather than a treatment basis in which case, you would have to follow similar protocol as above.
+
+month_plot_animal2 <- ddply(month_animal, .(month, treatment), summarise, seednum=sum(total_seednum))
+
+colnames(month_plot_animal2) <- c("month", "treatment", "animal_seeds")
+
+write.csv(month_plot_animal2, "biotic_month_plot.csv", row.names = FALSE)
+
+#spread the data so that 
+month_plot_animal3 <- spread(month_plot_animal2, treatment, seednum)
+
+
+# Now get the values for abiotically dispersed seeds.
+month_abiotic <- filter(month_eco, dispersal  != "animal")
+month_plot_abiotic <- ddply(month_abiotic, .(month, treatment), summarise, seednum=sum(total_seednum))
+write.csv(month_plot_abiotic, "abiotic_month_plot.csv", row.names = FALSE)
+
+# join together to create plot that documents biotically and abiotic dispersal seed abundance
+
+#month_all_plot <- right_join(month_plot_abiotic, month_plot_animal2, by = "month")
+
+#### CONTINUE HERE ####
+
+#get the density included
+month_all3$Hial_D <- (month_all3$Hial)/(10.4)
+month_all3$Pema_D <- (month_all3$Pema)/(10.4)
+month_all3$Viko_D <- (month_all3$Viko)/(10.4)
+month_all3$Vogu_D <- (month_all3$Vogu)/(7.8)
+month_all3$spp_total <- month_all3$Hial+month_all3$Pema + month_all3$Viko + month_all3$Vogu
+
+write.csv(month_all3, "month_all_notrt_nw.csv", row.names=FALSE)
