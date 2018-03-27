@@ -15,6 +15,9 @@ winddiv <- read.csv("wind_div_sub_notrtsp_nw.csv", header = TRUE)
 winddiv$block <- as.factor(winddiv$block)
 winddiv <- winddiv[complete.cases(winddiv),]
 
+abioticdiv <- read.csv("abiotic_div_sub_notrtsp_nw.csv", header = TRUE)
+abioticdiv$block <- as.factor(abioticdiv$block)
+
 lianadiv <- read.csv("liana_div_sub_notrtsp_nw.csv", header = TRUE)
 lianadiv$block <- as.factor(lianadiv$block)
 lianadiv <- lianadiv[complete.cases(lianadiv),]
@@ -99,7 +102,7 @@ with(animaldiv, table(block, treatment))
 #1) Does species richness of seeds differ between planted tree species treatments? 
 
 ##a) model development
-animal_richness<-glmer(richness~block+treatment+(1|plot), family = poisson, data=animaldiv)
+animal_richness<-lm(richness~block+treatment, data=animaldiv)
 
 ##b) plot residuals to look for homogeneity
 plot(animal_richness)
@@ -118,7 +121,7 @@ qqline(rich.res, col = 'red')
 
 ##d) summary of data
 summary(animal_richness)
-anova(animal_richness, test= "F") 
+anova(animal_richness, test= "Chi") 
 
 ##e) getting p-values
 #use for finding z scores for info below
@@ -244,6 +247,97 @@ anova(wind_richness, test= "F")
 
 
 
+##### Data Exploration for abiotic dispersal #########
+##a.  Outliers in Y / Outliers in X 
+#i.	plot response and predictors to check for outliers  (only with continuous data)
+#1.	Use Mydotplot or dotplot or boxplot, identify outliers
+hist(abioticdiv$richness)
+boxplot(abioticdiv$richness~ abioticdiv$treatment, main= "abiotic dispersed seed richness across treatments", xlab="Treatment", ylab="Species richness")
+
+#created dotplot as suggested by Dr. Dixon on 8 Aug meeting.
+ggplot(abioticdiv, aes(treatment, richness))+
+  geom_dotplot(binaxis = "y", method="histodot", binwidth = 1)+
+  xlab("Planted Tree Species")+
+  ylab("Species Richness")
+#pema appears to have the lowest species richness
+
+##b.	Examine Zero inflation Y
+#Not applicable for species richness because there are no zeros when summed to the plot level and response is continuous (>0)
+
+##c.	Collinearity X: correlation between covariates
+#i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
+with(abioticdiv, table(treatment, richness))
+boxplot(abioticdiv$richness~abioticdiv$treatment, main= "Seed species richness per treatment")
+#have all combinations here. 
+#Missing one plot, vogu1.
+##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
+#check variance inflation factor
+vif(glm(richness~ treatment+block, data = abioticdiv))
+vif(glm(richness~ treatment*block, data = abioticdiv))
+# model shows interactions when include the treatment*block, shows collinearity
+
+#d.	Homogeneity of variance?
+#Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
+# i.	Plot response against each predictor and random effect. 
+ggplot(abioticdiv, aes(treatment, richness))+
+  geom_boxplot()
+#more variance with Hial
+
+#e.	Independence Y - are Y's independent? 
+#1.	Is there a pattern across time or space that is not incorporated in the model? 
+ggplot(abioticdiv, aes(treatment, richness, color=treatment))+
+  geom_boxplot()+
+  facet_grid(.~block)
+
+ggplot(abioticdiv, aes(block, richness, color=treatment))+
+  geom_bar(stat="identity")+
+  facet_grid(.~treatment)
+
+
+#More variance with block 2 and more variance with Hial 
+
+#ii. Are there other potential factors that reduce independence of Y’s? 
+#timing is similar, can't think of anything else that might matter. 
+
+#f.	Sufficient data?  
+##As a rule of thumb, (all models), should have 15 to 20 observations for each parameter. So, if have 50 observations, should really only have 3 parameters. 
+# There are 15 observations with really one parameter, total_seednum
+
+#i.	Do all levels of Island have adequate samples of at each level of Native? 	Examine interactions
+#Is the quality of the data good enough to include them? (i.e. do we have enough samples for each level of the interaction?) 
+with(abioticdiv, table(block, treatment))
+
+########## Analysis   ###############
+
+#1) Does species richness of seeds differ between planted tree species treatments? 
+
+##a) model development
+#abiotic_richness<-glm(richness~block+treatment, data=abioticdiv) #not really a poisson distribution
+abiotic_richness2 <- lm(richness~block+treatment, data=abioticdiv)
+##b) plot residuals to look for homogeneity
+plot(abiotic_richness)
+rich.res <-  resid(abiotic_richness)
+rich.pred <-  predict(abiotic_richness)
+
+plot(rich.pred, rich.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
+abline(0, 0) 
+
+##c) plot histogram and qq plot to check for normality
+hist(rich.res)
+
+#check for normality with q-qplot
+qqnorm(rich.res)
+qqline(rich.res, col = 'red')
+
+##d) summary of data
+summary(abiotic_richness)
+anova(abiotic_richness, test= "F") 
+
+summary(abiotic_richness2)
+anova(abiotic_richness2, test = "F")
+##e) getting p-values
+#No need to get p-values because differences are small.
+
 ########## Life Form richness analysis ####################
 ##### Data Exploration for liana life form #########
 ##a.  Outliers in Y / Outliers in X 
@@ -257,7 +351,7 @@ ggplot(lianadiv, aes(treatment, richness))+
   geom_dotplot(binaxis = "y", method="histodot", binwidth = 1)+
   xlab("Planted Tree Species")+
   ylab("Species Richness")
-#pema appears to have the lowest species richness
+#pema appears to have the lowest liana species richness
 
 ##b.	Examine Zero inflation Y
 #Not applicable for species richness because there are no zeros when summed to the plot level and response is continuous (>0)
@@ -308,7 +402,7 @@ with(lianadiv, table(block, treatment))
 #1) Does species richness of seeds differ between planted tree species treatments? 
 
 ##a) model development
-liana_richness<-glmer(richness~block+treatment+(1|plot), family = poisson, data=lianadiv)
+liana_richness<-lm(richness~block+treatment, data=lianadiv)
 
 ##b) plot residuals to look for homogeneity
 plot(liana_richness)
@@ -330,7 +424,7 @@ summary(liana_richness)
 anova(liana_richness, test= "F") 
 
 ##e) getting p-values
-# no reason to get these
+# May need to do this later on.
 
 ##### Data Exploration for shrub life form #########
 ##a.  Outliers in Y / Outliers in X 
@@ -395,7 +489,7 @@ with(shrubdiv, table(block, treatment))
 #1) Does species richness of seeds differ between planted tree species treatments? 
 
 ##a) model development
-shrub_richness<-glmer(richness~block+treatment+(1|plot), family = poisson, data=shrubdiv)
+shrub_richness<-lm(richness~block+treatment, data=shrubdiv)
 
 ##b) plot residuals to look for homogeneity
 plot(shrub_richness)
@@ -477,7 +571,7 @@ with(treediv, table(block, treatment))
 
 ########## Analysis   ###############
 
-#1) Does species richness of seeds differ between planted tree species treatments? 
+#1) Does species richness of seeds differ between planted tree species treatments?
 
 ##a) model development
 #tree_richness<-glmer(richness~block+treatment+(1|plot), family = poisson, data=treediv) # Not needed because histogram showed normal data.
@@ -517,7 +611,7 @@ boxplot(animaldiv$diversity~ animaldiv$treatment, main= "Species Diversity per t
 # pema has lower diversity
 
 #created dotplot as suggested by Dr. Dixon on 8 Aug meeting. Better to use dots when so few observations.
-ggplot(animaldiv, aes(treatment, diversity))+
+ggplot(animaldiv,aes(treatment, diversity))+
   geom_dotplot(binaxis = "y", method="histodot", binwidth = .1)+
   xlab("Planted Tree Species")+
   ylab("Species Diversity")
@@ -583,6 +677,7 @@ animal_diversity<-lm(diversity~block+treatment, data=animaldiv)
 
 ##b)plot residuals to look at homogeneity
 plot(animal_diversity)
+
 div.res <- resid(animal_diversity)
 div.pred <- predict(animal_diversity)
 
@@ -692,6 +787,98 @@ anova(wind_diversity, test = "F") #should not use if unbalanced
 #not needed, found above
 
 
+##### Abiotic Data Exploration #########
+##a.  Outliers in Y / Outliers in X 
+#i.	plot response and predictors to check for outliers  (only with continuous data)
+#1.	Use Mydotplot or dotplot or boxplot, identify outliers
+hist(abioticdiv$diversity)
+boxplot(abioticdiv$diversity~ abioticdiv$treatment, main= "abiotic dispersal seed diversity per treatment", xlab="treatment", ylab="species diversity")
+
+#vogu and hial have greatest diversity 
+
+#created dotplot as suggested by Dr. Dixon on 8 Aug meeting. Better to use dots when so few observations.
+ggplot(abioticdiv, aes(treatment, diversity))+
+  geom_dotplot(binaxis = "y", method="histodot", binwidth = .1)+
+  xlab("Planted Tree Species")+
+  ylab("Species Diversity")
+
+#Viko is very different than the rest
+
+##b.	Examine Zero inflation Y
+#Not applicable for species richness because there are no zeros when summed to the plot level and response is continuous (>0)
+
+##c.	Collinearity X: correlation between covariates
+#i.	Plot each predictor against each other (since categorical, will use table to make sure we have all combinations)
+with(abioticdiv, table(treatment, diversity))
+boxplot(abioticdiv$diversity~abioticdiv$treatment, main= "Seed species diversity per treatment")
+#have all combinations here. 
+#Missing one plot, vogu1.
+##good = balanced, bad = unequal sample sizes, ugly = one or more combination is missing
+#check variance inflation factor
+vif(glm(diversity~ treatment+block, data = abioticdiv))
+#vif(glm(diversity~ treatment*block, data = abioticdiv))
+# model shows interactions when include the treatment*block, shows collinearity
+
+#d.	Homogeneity of variance?
+#Look at relationships of Y vs X’s to see if homogenous variances at each X value, linear relationships
+# i.	Plot response against each predictor and random effect. 
+ggplot(abioticdiv, aes(treatment, diversity))+
+  geom_boxplot()
+#more variance within vogu, one outlier in pema
+
+#e.	Independence Y - are Y's independent? 
+#1.	Is there a pattern across time or space that is not incorporated in the model? 
+ggplot(abioticdiv, aes(treatment, diversity, color=treatment))+
+  geom_boxplot()+
+  facet_grid(.~block)
+
+###this is the better one
+ggplot(abioticdiv, aes(block, diversity, color=treatment))+
+  geom_boxplot()+
+  facet_grid(.~treatment)
+
+ggplot(abioticdiv, aes(block, diversity, color=treatment))+
+  geom_bar(stat="identity")+
+  facet_grid(.~treatment)
+
+#ii. Are there other potential factors that reduce independence of Y’s? 
+#timing is similar, can't think of anything else that might matter. 
+
+#f.	Sufficient data?  
+##As a rule of thumb, (all models), should have 15 to 20 observations for each parameter. So, if have 50 observations, should really only have 3 parameters. 
+# There are 15 observations with really one parameter, total_seednum
+
+##########  Analysis   ###############
+#1) Does diversity of wind dispersed seed species differ between planted treatments? 
+
+##a) model development
+abiotic_diversity<-lm(diversity~block+treatment, data=abioticdiv)
+
+##b)plot residuals to look at homogeneity
+plot(abiotic_diversity)
+
+div.res <- resid(abiotic_diversity)
+div.pred <- predict(abiotic_diversity)
+
+plot(abioticdiv$diversity, div.res, ylab="Residuals", xlab="abiotic dispersed seed species diversity", main="diversity pred by resid") 
+abline(0, 0) 
+
+##c)plot histogram and Q-Q plot to check for normality
+hist(div.res)
+
+#check for normality with q-qplot
+qqnorm(div.res)
+qqline(div.res, col = 'red')
+
+##d) summary of analysis
+summary(abiotic_diversity)
+anova(abiotic_diversity, test = "F") #should not use if unbalanced
+
+##e) look for p-values
+#not needed, found above
+
+
+
 ##### Life Form Diversity Analysis ##########
 
 ##### Liana Diversity Data Exploration #########
@@ -762,6 +949,7 @@ liana_diversity<-lm(diversity~block+treatment, data=lianadiv)
 
 ##b)plot residuals to look at homogeneity
 plot(liana_diversity)
+
 div.res <- resid(liana_diversity)
 div.pred <- predict(liana_diversity)
 
@@ -793,7 +981,7 @@ anova(liana_diversity, test = "F") #should not use if unbalanced
 hist(shrubdiv$diversity)
 boxplot(shrubdiv$diversity~ shrubdiv$treatment, main= "Species Diversity per treatment", xlab="treatment", ylab="species diversity")
 
-#vogu and hial have greatest diversity 
+#Hial has a very narrow range of diversity for shrubs, vogu has great differences across blocks.
 
 
 #created dotplot as suggested by Dr. Dixon on 8 Aug meeting. Better to use dots when so few observations.
