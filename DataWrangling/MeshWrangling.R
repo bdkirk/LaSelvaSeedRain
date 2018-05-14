@@ -26,8 +26,13 @@ trap_trt <- trap_trt[,-6]
 #Merges data together
 mesh_abund2 <- merge(sum_trap, trap_trt, by="trap", all.x=TRUE)
 
-write.csv(mesh_abund2, "Mesh_abund_analysis.csv")
+write.csv(mesh_abund2, "Mesh_abund_analysis.csv", row.names = FALSE)
 
+# create file to look at seed abundance and perhaps richness by seed size.
+mesh_abund3 <- ddply(mesh_abund, .(trap, species), summarise, seednum=sum(total_seednum))
+mesh_abund4 <- ddply(mesh_abund, .(species, meshtype), summarise, seednum=sum(total_seednum))
+
+write.csv(mesh_abund4, "mesh_seedsize.csv", row.names = FALSE)
 
 #######Diversity#######
 #load libraries
@@ -80,7 +85,8 @@ tail(meshdiv_data2)
 
 #check and make sure merged data has same number of rows as seedrain_all originally had
 #need to change column name from x to trap
-colnames(meshdiv_data2) <- c("trap", "richness", "diversity", "evenness")
+colnames(meshdiv_data2) <- c("trap", "richness", "diversity", "evenness", 
+                             "divnorm")
 #Merges data together
 meshdiv_data3 <- merge(meshdiv_data2, trap_trt, by="trap", all.x=TRUE)
 
@@ -101,8 +107,8 @@ trapsum <- ddply(meshcomp, .(trap, species), summarise, seednum=sum(total_seednu
 meshcomp_data <- dcast(trapsum, trap ~ species, value.var="seednum")
 #This sorts the data after it is created
 meshcomp_data <- meshcomp_data[,c(names(meshcomp_data)[1],sort(names(meshcomp_data)[2:ncol(meshcomp_data)]))]
-#identifies all seed rain species that are NA
-meshcomp_data <- meshcomp_data[, -which(names(meshcomp_data)=="NA")]
+#identifies all seed rain species that are NA # code not working
+#meshcomp_data <- meshcomp_data[, -which(names(meshcomp_data)=="NA")]
 #Replace NA's with zeros
 meshcomp_data[is.na(meshcomp_data)] <- 0
 
