@@ -38,7 +38,7 @@ summary(mabundanalysis)
 lsmeans(mabundanalysis, "meshtype", contr = "pairwise") # This does not give accurate estimates
 
 #Get z-value from lsmeans and then convert with t-test to lsmeans. z-values are like t-values with inf df
-2*pt(q= -3.436, df= 62, lower=TRUE)
+2*pt(q= -3.436, df= 62, lower.tail=TRUE)
 # Yes there is a significant difference in abundance based on mesh type P= 0.001 (t-test)
 
 #library(emmeans) #only un# if want to run emmeans. This will overwrite lme4
