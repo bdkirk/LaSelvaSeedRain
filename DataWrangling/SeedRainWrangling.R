@@ -26,7 +26,7 @@ seedrain$species<-as.factor(seedrain$species)
 levels(seedrain$species)
 summary(seedrain$species)
 
-#change incorrect species names
+#change incorrect species names gsub("current incorrect", "correction", levels(data$column))
 levels(seedrain$species)<-gsub("kochnyi", "koschnyi", levels(seedrain$species))
 levels(seedrain$species)<-gsub("seemanii", "seemannii", levels(seedrain$species))
 levels(seedrain$species)<-gsub("tecaphora", "thecaphora", levels(seedrain$species))
