@@ -119,7 +119,10 @@ ggplot(divanalysis, aes(block, richness))+
 #1) Does species richness of seeds differ between overstory treatments? 
 
 ##a) model development
-richnessmod1<-glmer(richness~block+treatment+(1|plot), family = poisson, data=divanalysis)
+richnessmod1<-lm(richness~block+treatment, data=divanalysis)
+
+# This model is not necessary because the residual df is not large.
+#richnessmod2 <- glmer(richness ~ block + treatment + (1|plot), family = poisson, data = divanalysis)
 
 ##b) plot residuals to look for homogeneity
 plot(richnessmod1)
@@ -138,7 +141,10 @@ qqline(rich.res, col = 'red')
 
 ##d) summary of data
 summary(richnessmod1)
-anova(richnessmod1, test= "F") 
+anova(richnessmod1, test= "F")
+
+summary(richnessmod2)
+anova(richnessmod2, test = "F")
 
 ##e) getting p-values
 lsmeans(richnessmod1, "treatment", contr= "pairwise")
@@ -177,7 +183,7 @@ ptukey(abs(-0.305)*sqrt(2), nmeans= 4, df=8, lower = F)
 
 ################################################################################
 ######################### Diversity #############################################
-################################################################################
+###############################################################################
 ##### Data Exploration #########
 ##a.  Outliers in Y / Outliers in X 
 #i.	plot response and predictors to check for outliers  (only with continuous data)
