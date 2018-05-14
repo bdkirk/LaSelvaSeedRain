@@ -124,3 +124,24 @@ month_all3$Vogu_D <- (month_all3$Vogu)/(7.8)
 month_all3$spp_total <- month_all3$Hial+month_all3$Pema + month_all3$Viko + month_all3$Vogu
 
 write.csv(month_all3, "month_all_notrt_nw.csv", row.names=FALSE)
+
+
+# Plotting density across months
+month_all4 <- subset(month_all3, select = c(1, 6, 7, 8, 9))
+month_all5 <- melt(month_all4, id=c("month"))
+str(month_all5)
+month_all5$date <- as.Date(month_all5$month, format = ("%b%Y")) # Not working
+month_all5$month <- as.character(month_all5$month)
+
+ggplot(month_all5, aes(month, value, fill = variable))+
+  geom_bar(position = "dodge", stat = "identity")+
+  labs( x= "Months", y= "Seed Density (seeds/m2 year-1)")+
+  scale_fill_discrete(name = "Treatment", labels= c("Hieronyma", "Pentaclethra", "Virola", "Vochysia"))+
+  theme(axis.text.x= element_text(angle = 65, hjust =1))
+
+# line rather than bar # not working well
+ggplot(month_all5, aes(month, value, color = variable))+
+  geom_point()+
+  labs( x= "Months", y= "Seed Density (seeds/m2 year-1)")+
+  scale_fill_discrete(name = "Treatment", labels= c("Hieronyma", "Pentaclethra", "Virola", "Vochysia"))+
+  theme(axis.text.x= element_text(angle = 65, hjust =1))
