@@ -41,10 +41,10 @@ lsmeans(mabundanalysis, "meshtype", contr = "pairwise") # This does not give acc
 2*pt(q= -3.436, df= 62, lower.tail=TRUE)
 # Yes there is a significant difference in abundance based on mesh type P= 0.001 (t-test)
 
-#library(emmeans) #only un# if want to run emmeans. This will overwrite lme4
+library(emmeans) #only un# if want to run emmeans. This will overwrite lme4
 # use emmip to look at interactions
 
-#emmip(mabundanalysis, treatment~meshtype)# this shows that there is an interaction. 
+emmip(mabundanalysis, treatment~meshtype)# this shows that there is an interaction. 
 
 #emmeans(mabundanalysis, contr~meshtype) #gives the same results.
 
@@ -93,7 +93,7 @@ anova(mrichanalysis)
 
 #OR
 #plot(mrichanalysis)
-
+emmip(mrichanalysis, treatment~meshtype)
 # Question- does species richness differ between mesh types?
 
 lsmeans(mrichanalysis, "meshtype", contr= "pairwise") #YES!
@@ -141,6 +141,8 @@ summary(mesh_divanalysis)
 # Does diversity vary in each mesh type?
 lsmeans(mesh_divanalysis, "meshtype", contr= "pairwise")
 #this is significant, p< 0.0001
+
+emmip(mesh_divanalysis, treatment~meshtype)
 
 # Question- interaction between mesh type and treatment
 pf(q=0.5829, df1= 3, df2= 56, lower.tail = FALSE) # p = 0.628
@@ -244,6 +246,36 @@ nmsplot(mesh_seedcomp.mds, mesh_compdata$treatment, "Hial", "Pema", "Viko", "Vog
 #I am not sure what this does.
 stressplot(mesh_seedcomp.mds)
 
+#EDIT TO DEMONSTRATE A SCREEPLOT
+#Modified code from https://websites.pmc.ucsc.edu/~mclapham/Rtips/ordination.htm
+#data_matrix: rows are sites, columns are species
+#reps: number of random starts per number of factors
+#max_factors: maximum number of factors to do ordination with
+
+NMDS.scree<-function(data_matrix, reps=3, max_factors=2) { 
+  
+  n <- nrow(data_matrix)
+  stopifnot(n>max_factors)
+  
+  results <- sapply(rep(1:max_factors,each=reps), function(k){
+    metaMDS(data_matrix,autotransform=F,k=k)$stress
+  })
+  
+  plot(rep(1:max_factors,each=reps),results,
+       xlim=c(0,max_factors), ylim=c(0,results[1]),
+       xlab="# of Dimensions",ylab="Stress",main="NMDS screeplot")
+  
+}
+
+stressx <- NMDS.scree(mesh_seedcomp, reps=3, max_factors=7)
+#Based on this, you might use three dimensions rather than 2 dimensions
+meshseedcomp.mds2 <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 3, try = 100)
+meshseedcomp.mds2$stress
+stressplot(meshseedcomp.mds2)
+nmsplot(meshseedcomp.mds2, mesh_compdata$treatment, "Hial", "Pema", "Viko", "Vogu",
+        "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
+
+
 # The below code was added on 29 Aug after meeting with Katie Rey, stat help.  She helped modify the code but the small and regular mesh sizes do not show in the legend.  Need to work on this.
 library(car)
 
@@ -302,22 +334,36 @@ nmsplot_new(mesh_seedcomp.mds, mesh_compdata$meshtype, "meshsmall", "meshreg", "
 library(ggplot2); library(dplyr)
 #extract points from NMDS
 nmds_points <- as.data.frame(mesh_seedcomp.mds[["points"]])
-
+nmds_points3d <- as.data.frame(meshseedcomp.mds2[["points"]])
 #get attribute data in two columns
 attrib <- select(mesh_compdata, treatment, meshtype)
 
 #bind columns together
 nmds_points2 <- cbind(nmds_points, attrib) # this is a base function
 #nmds_points3 <- bind_cols(nmds_points, attrib) # this workds too
-
+nmds_points3d_2 <- cbind(nmds_points3d, attrib)
 ggplot(nmds_points2, aes(MDS1, MDS2, color= treatment, shape =meshtype))+
   geom_point(size= 3)+
   #scale_fill_brewer(palette = "Dark2")+ # not working
   stat_ellipse(aes(MDS1, MDS2, color = meshtype, type ="norm"))+
   theme_bw()
 
+# used 3d:
+bc_plot <- ggplot(nmds_points3d_2, aes(x= MDS1, y= MDS2, z= MDS3, color= treatment, shape =meshtype))+
+  geom_point(size= 3)+
+  #scale_fill_brewer(palette = "Dark2")+ # not working
+  stat_ellipse(aes(MDS1, MDS2, color = meshtype, type ="norm"))+
+  theme_bw()
 
-##Need to continue working on making small and regular mesh appear in figure as well as moving to Jacard or Sorenson
+
+p <- plot_ly(nmds_points3d_2, x = ~MDS1, y = ~MDS2, z = ~MDS3, color = ~treatment, symbol= ~meshtype, symbols = c('1', '5'), colors = c('#7b3294', '#008837', '#c2a5cf', '#fdae61')) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = 'MDS1'),
+                      yaxis = list(title = 'MDS2'),
+                      zaxis = list(title = 'MDS3')))
+
+p
+
 
 ############ Presence/Absense #############
 
@@ -346,12 +392,16 @@ advanced.procD.lm(mesh_seedcomp.jc ~ block*treatment +meshtype + meshtype:block 
 
 #NMDS
 mesh_seedcompj.mds <- metaMDS(binary, autotransform = F, expand = F, k = 2, try = 100)
-mesh_seedcomp.mds$stress
+mesh_seedcompj.mds$stress
 #Ordination
 nmsplot(mesh_seedcompj.mds, mesh_compdata$treatment, "Hial", "Pema", "Viko", "Vogu", "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
 #I am not sure what this does.
 stressplot(mesh_seedcomp.mds)
 #nmsplot(mesh_seedcompj.mds, mesh_compdata$meshtype, "meshsmall", "meshregular", "topright", c("Fine Mesh", "Regular Mesh"))
+
+# Getting 3d:
+mesh_seedcompj3d.mds <- metaMDS(binary, autotransform = F, expand = F, k = 3, try = 100)
+mesh_seedcompj3d.mds$stress
 
 ### Using github technique to plot:
 
@@ -372,3 +422,16 @@ ggplot(jc_points2, aes(MDS1, MDS2, color= treatment, shape =meshtype))+
   stat_ellipse(aes(MDS1, MDS2, color = meshtype, type ="norm"))+
   theme_bw()
 # Holy smokes, those are some groups!
+
+
+# getting three dimensions: Must have run previous code
+jc_points3d <- as.data.frame(mesh_seedcompj3d.mds[["points"]])
+jc_points3d_2 <- cbind(jc_points3d, attrib)
+
+library(plotly)
+jc_plot <- plot_ly(jc_points3d_2, x = ~MDS1, y = ~MDS2, z = ~MDS3, color = ~treatment, symbol= ~meshtype, symbols = c('1', '5'), colors = c('#7b3294', '#008837', '#c2a5cf', '#fdae61')) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = 'MDS1'),
+                      yaxis = list(title = 'MDS2'),
+                      zaxis = list(title = 'MDS3')))
+jc_plot
