@@ -1,7 +1,7 @@
 # Seed traits Diversity analyses for both richness and shannon-weiner diversity
 
 # load libraries
-library(ggplot2); library(car); library(lsmeans); library(stats);library(multcomp); library(lme4)
+library(ggplot2); library(car); library(lsmeans); library(stats);library(multcomp); library(lme4); library(ggResidpanel)
 
 # set wd
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
@@ -105,19 +105,8 @@ with(animaldiv, table(block, treatment))
 animal_richness<-lm(richness~block+treatment, data=animaldiv)
 
 ##b) plot residuals to look for homogeneity
-plot(animal_richness)
-rich.res <-  resid(animal_richness)
-rich.pred <-  predict(animal_richness)
 
-plot(rich.pred, rich.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
-abline(0, 0) 
-
-##c) plot histogram and qq plot to check for normality
-hist(rich.res)
-
-#check for normality with q-qplot
-qqnorm(rich.res)
-qqline(rich.res, col = 'red')
+animal_rich_resid <- resid_panel(resid(animal_richness), fitted(animal_richness), bins = 20)
 
 ##d) summary of data
 summary(animal_richness)
@@ -127,6 +116,8 @@ anova(animal_richness, test= "Chi")
 #use for finding z scores for info below
 summary(glht(animal_richness, mcp(treatment="Tukey")))
 
+#Either method works, results are the same.
+lsmeans(animal_richness, "treatment", contr= "pairwise")
 #ptukey(Zscore*sqrt(2), nmeans=4, df=8, lower = F)
 #IMPORTANT: need to use abs(zscore) for negative values.
 
@@ -221,29 +212,19 @@ with(winddiv, table(block, treatment))
 #1) Does species richness of seeds differ between planted tree species treatments? 
 
 ##a) model development
-wind_richness<-glmer(richness~block+treatment+(1|plot), family = poisson, data=winddiv)
+# data appears to be normally distributed so this is the correct model. Tried with glmer and lm
+wind_richness <- lm(richness~block+treatment, data = winddiv)
 
 ##b) plot residuals to look for homogeneity
-plot(wind_richness)
-rich.res <-  resid(wind_richness)
-rich.pred <-  predict(wind_richness)
-
-plot(rich.pred, rich.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
-abline(0, 0) 
-
-##c) plot histogram and qq plot to check for normality
-hist(rich.res)
-
-#check for normality with q-qplot
-qqnorm(rich.res)
-qqline(rich.res, col = 'red')
+wind_rich_resid <- resid_panel(resid(wind_richness), fitted(wind_richness), bins = 20)
+wind_rich_resid
 
 ##d) summary of data
 summary(wind_richness)
 anova(wind_richness, test= "F") 
 
 ##e) getting p-values
-#No need to get p-values because differences are small.
+# found in anova table
 
 
 
@@ -309,32 +290,20 @@ with(abioticdiv, table(block, treatment))
 
 ########## Analysis   ###############
 
-#1) Does species richness of seeds differ between planted tree species treatments? 
+#1) Does species richness of seeds differ between overstory tree species? 
 
 ##a) model development
 #abiotic_richness<-glm(richness~block+treatment, data=abioticdiv) #not really a poisson distribution
 abiotic_richness2 <- lm(richness~block+treatment, data=abioticdiv)
+
 ##b) plot residuals to look for homogeneity
-plot(abiotic_richness)
-rich.res <-  resid(abiotic_richness)
-rich.pred <-  predict(abiotic_richness)
-
-plot(rich.pred, rich.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
-abline(0, 0) 
-
-##c) plot histogram and qq plot to check for normality
-hist(rich.res)
-
-#check for normality with q-qplot
-qqnorm(rich.res)
-qqline(rich.res, col = 'red')
+abiotic_rich_resid <- resid_panel(resid(abiotic_richness2), fitted(abiotic_richness2), bins = 20)
+abiotic_rich_resid
 
 ##d) summary of data
-summary(abiotic_richness)
-anova(abiotic_richness, test= "F") 
-
 summary(abiotic_richness2)
 anova(abiotic_richness2, test = "F")
+
 ##e) getting p-values
 #No need to get p-values because differences are small.
 
@@ -405,25 +374,14 @@ with(lianadiv, table(block, treatment))
 liana_richness<-lm(richness~block+treatment, data=lianadiv)
 
 ##b) plot residuals to look for homogeneity
-plot(liana_richness)
-rich.res <-  resid(liana_richness)
-rich.pred <-  predict(liana_richness)
+liana_rich_resid <- resid_panel(resid(liana_richness), fitted(liana_richness), bins = 20)
+liana_rich_resid
 
-plot(rich.pred, rich.res, ylab="Residuals", xlab="predicted values", main="resid vs pred") 
-abline(0, 0) 
-
-##c) plot histogram and qq plot to check for normality
-hist(rich.res)
-
-#check for normality with q-qplot
-qqnorm(rich.res)
-qqline(rich.res, col = 'red')
-
-##d) summary of data
+##c) summary of data
 summary(liana_richness)
 anova(liana_richness, test= "F") 
 
-##e) getting p-values
+##d) getting p-values
 # May need to do this later on.
 
 ##### Data Exploration for shrub life form #########
@@ -492,22 +450,14 @@ with(shrubdiv, table(block, treatment))
 shrub_richness<-lm(richness~block+treatment, data=shrubdiv)
 
 ##b) plot residuals to look for homogeneity
-plot(shrub_richness)
-rich.res <-  resid(shrub_richness)
-rich.pred <-  predict(shrub_richness)
+shrub_rich_resid <- resid_panel(resid(shrub_richness), fitted(shrub_richness), bins = 20)
+shrub_rich_resid
 
-##c) plot histogram and qq plot to check for normality
-hist(rich.res)
-
-#check for normality with q-qplot
-qqnorm(rich.res)
-qqline(rich.res, col = 'red')
-
-##d) summary of data
+##c) summary of data
 summary(shrub_richness)
 anova(shrub_richness, test= "F") 
 
-##e) getting p-values
+##d) getting p-values
 # no reason to get these
 
 ##### Data Exploration for tree life form #########
@@ -577,23 +527,16 @@ with(treediv, table(block, treatment))
 #tree_richness<-glmer(richness~block+treatment+(1|plot), family = poisson, data=treediv) # Not needed because histogram showed normal data.
 
 tree_rich <- lm(richness~block+treatment, data = treediv)
+
 ##b) plot residuals to look for homogeneity
-plot(tree_rich)
-rich.res <-  resid(tree_rich)
-rich.pred <-  predict(tree_rich)
+tree_rich_resid <- resid_panel(resid(tree_rich), fitted(tree_rich), bins = 20)
+tree_rich_resid
 
-##c) plot histogram and qq plot to check for normality
-hist(rich.res)
-
-#check for normality with q-qplot
-qqnorm(rich.res)
-qqline(rich.res, col = 'red')
-
-##d) summary of data
+##c) summary of data
 summary(tree_rich)
 anova(tree_rich, test= "F") 
 
-##e) getting p-values
+##d) getting p-values
 # found in other summaries because this is just an lm test.
 
 
@@ -676,27 +619,15 @@ with(animaldiv, table(block, treatment))
 animal_diversity<-lm(diversity~block+treatment, data=animaldiv)
 
 ##b)plot residuals to look at homogeneity
-plot(animal_diversity)
-
-div.res <- resid(animal_diversity)
-div.pred <- predict(animal_diversity)
-
-plot(div.pred, div.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
-abline(0,0)
-
-##c)plot histogram and Q-Q plot to check for normality
-hist(div.res)
-
-#check for normality with q-qplot
-qqnorm(div.res)
-qqline(div.res, col = 'red')
+animal_div_resid <- resid_panel(resid(animal_diversity), fitted(animal_diversity), bins = 20)
+animal_div_resid
 
 ##d) summary of analysis
 summary(animal_diversity)
 anova(animal_diversity, test = "F") #should not use if unbalanced
 
 ##e) look for p-values
-
+# no significant difference
 
 ##### Wind dispersed Data Exploration #########
 ##a.  Outliers in Y / Outliers in X 
@@ -764,20 +695,8 @@ ggplot(winddiv, aes(block, diversity, color=treatment))+
 wind_diversity<-lm(diversity~block+treatment, data=winddiv)
 
 ##b)plot residuals to look at homogeneity
-plot(wind_diversity)
-
-div.res <- resid(wind_diversity)
-div.pred <- predict(wind_diversity)
-
-plot(winddiv$diversity, div.res, ylab="Residuals", xlab="Wind dispersed seed species diversity", main="diversity pred by resid") 
-abline(0, 0) 
-
-##c)plot histogram and Q-Q plot to check for normality
-hist(div.res)
-
-#check for normality with q-qplot
-qqnorm(div.res)
-qqline(div.res, col = 'red')
+wind_div_resid <- resid_panel(resid(wind_diversity), fitted(wind_diversity), bins = 20)
+wind_div_resid
 
 ##d) summary of analysis
 summary(wind_diversity)
@@ -855,24 +774,12 @@ ggplot(abioticdiv, aes(block, diversity, color=treatment))+
 abiotic_diversity<-lm(diversity~block+treatment, data=abioticdiv)
 
 ##b)plot residuals to look at homogeneity
-plot(abiotic_diversity)
-
-div.res <- resid(abiotic_diversity)
-div.pred <- predict(abiotic_diversity)
-
-plot(abioticdiv$diversity, div.res, ylab="Residuals", xlab="abiotic dispersed seed species diversity", main="diversity pred by resid") 
-abline(0, 0) 
-
-##c)plot histogram and Q-Q plot to check for normality
-hist(div.res)
-
-#check for normality with q-qplot
-qqnorm(div.res)
-qqline(div.res, col = 'red')
+abiotic_div_resid <- resid_panel(resid(abiotic_diversity), fitted(abiotic_diversity), bins = 20)
+abiotic_div_resid
 
 ##d) summary of analysis
 summary(abiotic_diversity)
-anova(abiotic_diversity, test = "F") #should not use if unbalanced
+anova(abiotic_diversity, test = "F") 
 
 ##e) look for p-values
 #not needed, found above
@@ -948,29 +855,14 @@ ggplot(lianadiv, aes(block, diversity, color=treatment))+
 liana_diversity<-lm(diversity~block+treatment, data=lianadiv)
 
 ##b)plot residuals to look at homogeneity
-plot(liana_diversity)
+liana_div_resid <- resid_panel(resid(liana_diversity), fitted(liana_diversity), bins = 20)
+liana_div_resid
 
-div.res <- resid(liana_diversity)
-div.pred <- predict(liana_diversity)
-
-plot(div.pred, div.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
-abline(0,0)
-
-plot(lianadiv$diversity, div.res, ylab="Residuals", xlab="Seed Species diversity", main="diversity pred by resid") 
-abline(0, 0) 
-
-##c)plot histogram and Q-Q plot to check for normality
-hist(div.res)
-
-#check for normality with q-qplot
-qqnorm(div.res)
-qqline(div.res, col = 'red')
-
-##d) summary of analysis
+##c) summary of analysis
 summary(liana_diversity)
 anova(liana_diversity, test = "F") #should not use if unbalanced
 
-##e) look for p-values
+##d) look for p-values
 # no need.
 
 
@@ -1042,21 +934,9 @@ ggplot(shrubdiv, aes(block, diversity, color=treatment))+
 shrub_diversity<-lm(diversity~block+treatment, data=shrubdiv)
 
 ##b)plot residuals to look at homogeneity
-div.res <- resid(shrub_diversity)
-div.pred <- predict(shrub_diversity)
+shrub_div_resid <- resid_panel(resid(shrub_diversity), fitted(shrub_diversity), bins = 20)
+shrub_div_resid
 
-plot(div.pred, div.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
-abline(0,0)
-
-plot(shrubdiv$diversity, div.res, ylab="Residuals", xlab="Seed Species diversity", main="diversity pred by resid") 
-abline(0, 0) 
-
-##c)plot histogram and Q-Q plot to check for normality
-hist(div.res)
-
-#check for normality with q-qplot
-qqnorm(div.res)
-qqline(div.res, col = 'red')
 
 ##d) summary of analysis
 summary(shrub_diversity)
@@ -1135,22 +1015,8 @@ ggplot(treediv, aes(block, diversity, color=treatment))+
 tree_diversity<-lm(diversity~block+treatment, data=treediv)
 
 ##b)plot residuals to look at homogeneity
-
-div.res <- resid(tree_diversity)
-div.pred <- predict(tree_diversity)
-
-plot(div.pred, div.res,  ylab="Residuals", xlab="predicted values", main="resid vs pred")
-abline(0,0)
-
-plot(treediv$diversity, div.res, ylab="Residuals", xlab="Seed Species diversity", main="diversity pred by resid") 
-abline(0, 0) 
-
-##c)plot histogram and Q-Q plot to check for normality
-hist(div.res)
-
-#check for normality with q-qplot
-qqnorm(div.res)
-qqline(div.res, col = 'red')
+tree_div_resid <- resid_panel(resid(tree_diversity), fitted(tree_diversity), bins = 20)
+tree_div_resid
 
 ##d) summary of analysis
 summary(tree_diversity)
