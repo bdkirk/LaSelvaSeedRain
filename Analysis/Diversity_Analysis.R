@@ -143,8 +143,8 @@ qqline(rich.res, col = 'red')
 summary(richnessmod1)
 anova(richnessmod1, test= "F")
 
-summary(richnessmod2)
-anova(richnessmod2, test = "F")
+#summary(richnessmod2)
+#anova(richnessmod2, test = "F")
 
 ##e) getting p-values
 lsmeans(richnessmod1, "treatment", contr= "pairwise")
