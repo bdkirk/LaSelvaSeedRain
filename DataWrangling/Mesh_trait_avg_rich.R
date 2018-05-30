@@ -56,6 +56,7 @@ library(plyr)
 #First summarise by species within traps
 animal_rich <- ddply(animal, .(trap, species, meshtype), summarise, sum= sum(total_seednum))
 str(animal_rich)
+
 #summarise number of species found in each trap # missing from trap 63
 animal_rich2 <- ddply(animal_rich, .(trap, meshtype), summarise, richness= length(species))
 
@@ -68,7 +69,7 @@ animal_rich2$richness <- as.numeric(animal_rich2$richness)
 
 #find average number of seeds per trap and se 
 animal_rich3 <- ddply(animal_rich2, .(meshtype), summarise, mean= round(mean(richness), 2), se=round(sd(richness)/sqrt(length(richness)), 4))
-
+animal_rich3$meter <- (animal_rich3$mean*0.52)
 # b) wind!
 #First summarise by species within traps
 wind_rich <- ddply(wind, .(trap, species, meshtype), summarise, sum= sum(total_seednum))
@@ -317,7 +318,7 @@ tog_rich3 <- ddply(tog_rich2, .(meshtype), summarise, mean= round(mean(richness)
 unknown_rich <- ddply(unknown, .(trap, species, meshtype), summarise, sum= sum(total_seednum))
 
 #summarise number of species found in each trap
-unknown_rich2 <- ddply(unkown_rich, .(trap, meshtype), summarise, richness= length(species))
+unknown_rich2 <- ddply(unknown_rich, .(trap, meshtype), summarise, richness= length(species))
 
 # missing 34 traps. will not run.
 
