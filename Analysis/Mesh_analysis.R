@@ -37,22 +37,22 @@ summary(mabundanalysis)
 # Does mesh type bias abundance of seed rain?
 lsmeans(mabundanalysis, "meshtype", contr = "pairwise") # This does not give accurate estimates
 
+#emmeans(mabundanalysis, contr~meshtype) #gives the same results.
+
 #Get z-value from lsmeans and then convert with t-test to lsmeans. z-values are like t-values with inf df
 2*pt(q= -3.436, df= 62, lower.tail=TRUE)
 # Yes there is a significant difference in abundance based on mesh type P= 0.001 (t-test)
 
-library(emmeans) #only un# if want to run emmeans. This will overwrite lme4
-# use emmip to look at interactions
 
-emmip(mabundanalysis, treatment~meshtype)# this shows that there is an interaction. 
-
-#emmeans(mabundanalysis, contr~meshtype) #gives the same results.
 
 # Question- is there a mesh-treatment interaction?
 
 #pf(q=f statistic, df1= treatment df, df2= error df, lower.tail = false if testing against a null hypothesis)
 pf(1.7268, df1=3, df2=62, lower.tail= FALSE) # Use f-value for interaction from model anova and df for corresponding variable
 # p = 0.171, No there is not a significant treatment by mesh interaction.
+
+# Interaction plot
+emmip(mabundanalysis, treatment~meshtype)# this shows that there is an interaction
 
 
 ###############################
@@ -91,9 +91,6 @@ resid_panel(resid(mrichanalysis), fitted(mrichanalysis), bins = 25 )
 summary(mrichanalysis)
 anova(mrichanalysis)
 
-#OR
-#plot(mrichanalysis)
-emmip(mrichanalysis, treatment~meshtype)
 # Question- does species richness differ between mesh types?
 
 lsmeans(mrichanalysis, "meshtype", contr= "pairwise") #YES!
@@ -106,6 +103,9 @@ pf(q=7.7121, df1= 3, df2= 56, lower.tail = FALSE)
 # Yes but what is it?? How do I determine pairwise differences?
 lsmeans(mrichanalysis, "meshtype", contr= "pairwise", by = "treatment")
 # all are statistically significant
+
+#plot(mrichanalysis)
+emmip(mrichanalysis, treatment~meshtype)
 
 # Apriori hypothesis testing??
 # add a component in data frame for animal and abiotically dispersed then run test:
@@ -142,6 +142,7 @@ summary(mesh_divanalysis)
 lsmeans(mesh_divanalysis, "meshtype", contr= "pairwise")
 #this is significant, p< 0.0001
 
+#interaction plot
 emmip(mesh_divanalysis, treatment~meshtype)
 
 # Question- interaction between mesh type and treatment
@@ -174,6 +175,10 @@ summary(mesh_evenanalysis)
 lsmeans(mesh_evenanalysis, "meshtype", contr="pairwise")
 #no significance found, p= 0.4538, 
 
+#interaction plot
+emmip(mesh_evenanalysis, treatment~meshtype)
+pf(q=0.2024, df1= 3, df2= 56, lower.tail = FALSE)
+#p=0.894
 ######## Composition ###############
 
 #Read in libraries
@@ -240,7 +245,7 @@ advanced.procD.lm(f1= mesh_seedcomp.bc ~ block*treatment +meshtype + meshtype:bl
 mesh_seedcomp.mds <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 2, try = 100)
 mesh_seedcomp.mds$stress
 
-#Ordination
+#Ordination (2D- stress was too high, so switched to 3D)
 nmsplot(mesh_seedcomp.mds, mesh_compdata$treatment, "Hial", "Pema", "Viko", "Vogu",
         "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
 #I am not sure what this does.
