@@ -135,13 +135,16 @@ month_all5$month <- as.character(month_all5$month)
 
 ggplot(month_all5, aes(month, value, fill = variable))+
   geom_bar(position = "dodge", stat = "identity")+
-  labs( x= "Months", y= "Seed Density (seeds/m2 year-1)")+
-  scale_fill_discrete(name = "Treatment", labels= c("Hieronyma", "Pentaclethra", "Virola", "Vochysia"))+
-  theme(axis.text.x= element_text(angle = 65, hjust =1))
+  labs( x= "Months", y= "Seed Density (seeds m-2 year-1)")+
+  scale_fill_discrete(name = "Overstory Tree Species", labels= c("Hieronyma", "Pentaclethra", "Virola", "Vochysia"))+
+  theme_bw()+
+  theme(axis.text.x= element_text(angle = 65, hjust =1))+
+  scale_fill_grey()
 
 # line rather than bar # not working well
 ggplot(month_all5, aes(month, value, color = variable))+
   geom_point()+
+  geom_path()+
   labs( x= "Months", y= "Seed Density (seeds/m2 year-1)")+
   scale_fill_discrete(name = "Treatment", labels= c("Hieronyma", "Pentaclethra", "Virola", "Vochysia"))+
   theme(axis.text.x= element_text(angle = 65, hjust =1))

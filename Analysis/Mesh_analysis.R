@@ -353,6 +353,7 @@ ggplot(nmds_points2, aes(MDS1, MDS2, color= treatment, shape =meshtype))+
   stat_ellipse(aes(MDS1, MDS2, color = meshtype, type ="norm"))+
   theme_bw()
 
+library(plotly)
 # used 3d:
 bc_plot <- ggplot(nmds_points3d_2, aes(x= MDS1, y= MDS2, z= MDS3, color= treatment, shape =meshtype))+
   geom_point(size= 3)+
