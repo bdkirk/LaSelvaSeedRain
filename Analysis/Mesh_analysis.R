@@ -179,16 +179,16 @@ lsmeans(mesh_evenanalysis, "meshtype", contr="pairwise")
 emmip(mesh_evenanalysis, treatment~meshtype)
 pf(q=0.2024, df1= 3, df2= 56, lower.tail = FALSE)
 #p=0.894
-######## Composition ###############
+                        ######## Composition ###############
 
 #Read in libraries
 library(ggplot2); library(vegan); library(geomorph)
 #set wd
 setwd("~/M.S. Thesis/Data/GitHubProjects/LaSelvaSeedRain/Data/TidyData")
 
-##  ---------------------------------------------------
+##### skip-- read below ######
+#ignore this function but do complete the bray-curtis analysis. This works but does not appropriately assign points and shapes based on tree species and mesh type.
 # Function for Plotting NMS results (Nick Lyon's code)
-##  ---------------------------------------------------
 
 # Function that plots NMS points with different colors for groups (only works for 4 groups)
 ## mod = object returned by metaMDS
@@ -216,7 +216,8 @@ nmsplot <- function(mod, groupcol, g1, g2, g3, g4, legpos, legcont) {
 }
 
 
-# Using Bray-Curtis dissimilarity index
+##### Using Bray-Curtis dissimilarity index #####
+
 #Get data
 mesh_compdata <- read.csv("mesh_comp_analysis.csv")
 ncol(mesh_compdata)
@@ -241,16 +242,17 @@ advanced.procD.lm(f1= mesh_seedcomp.bc ~ block*treatment +meshtype + meshtype:bl
     f2= ~ block*treatment + meshtype +meshtype:block, 
     group= ~ meshtype:treatment, data = mesh_compdata) # Four overstory treatments compared with one another to see if there are differences between regular and fine mesh at the treatment level.  Look in the p-values section and constrast meshsmall.TRT to meshreg.TRT.
 
-#NMDS
+# NMDS
 mesh_seedcomp.mds <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 2, try = 100)
 mesh_seedcomp.mds$stress
 
 #Ordination (2D- stress was too high, so switched to 3D)
 nmsplot(mesh_seedcomp.mds, mesh_compdata$treatment, "Hial", "Pema", "Viko", "Vogu",
         "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
-#I am not sure what this does.
+#Sheppard's plot
 stressplot(mesh_seedcomp.mds)
 
+### Screeplot ##
 #EDIT TO DEMONSTRATE A SCREEPLOT
 #Modified code from https://websites.pmc.ucsc.edu/~mclapham/Rtips/ordination.htm
 #data_matrix: rows are sites, columns are species
@@ -274,6 +276,8 @@ NMDS.scree<-function(data_matrix, reps=3, max_factors=2) {
 
 stressx <- NMDS.scree(mesh_seedcomp, reps=3, max_factors=7)
 #Based on this, you might use three dimensions rather than 2 dimensions
+
+
 meshseedcomp.mds2 <- metaMDS(mesh_seedcomp, autotransform = F, expand = F, k = 3, try = 100)
 meshseedcomp.mds2$stress
 stressplot(meshseedcomp.mds2)
@@ -284,10 +288,10 @@ nmsplot(meshseedcomp.mds2, mesh_compdata$treatment, "Hial", "Pema", "Viko", "Vog
 # The below code was added on 29 Aug after meeting with Katie Rey, stat help.  She helped modify the code but the small and regular mesh sizes do not show in the legend.  Need to work on this.
 library(car)
 
-#modifying composition code
-##  ---------------------------------------------------
+               ##########modifying composition code ######
+#Attempted to modify code but this wasn't working very well so did not use the modified code below in final version.  Instead used ggplot2 and plotly to make 3d ordinations. 
+
 # Function for Plotting NMS results (Nick Lyon's code)
-##  ---------------------------------------------------
 
 # Function that plots NMS points with different colors for groups (only works for 4 groups)
 ## mod = object returned by metaMDS
@@ -335,8 +339,10 @@ nmsplot_new(mesh_seedcomp.mds, mesh_compdata$treatment, g1= "Hial", g2 = "Pema",
 #This tests whether the ellipses are working off the right data by showing the mesh types for each trap rather than the treatments.
 nmsplot_new(mesh_seedcomp.mds, mesh_compdata$meshtype, "meshsmall", "meshreg", "topright", c("Small", "Regular"), mesh_compdata$meshtype, "bottomright", c("Small", "Regular"))
 
-############# Try plotting this all in ggplot ######################
-library(ggplot2); library(dplyr)
+
+############# Ordinations in ggplot2 with plotly ######################
+
+library(ggplot2); library(dplyr); library(car)
 #extract points from NMDS
 nmds_points <- as.data.frame(mesh_seedcomp.mds[["points"]])
 nmds_points3d <- as.data.frame(meshseedcomp.mds2[["points"]])
@@ -400,7 +406,7 @@ advanced.procD.lm(mesh_seedcomp.jc ~ block*treatment +meshtype + meshtype:block 
 mesh_seedcompj.mds <- metaMDS(binary, autotransform = F, expand = F, k = 2, try = 100)
 mesh_seedcompj.mds$stress
 #Ordination
-nmsplot(mesh_seedcompj.mds, mesh_compdata$treatment, "Hial", "Pema", "Viko", "Vogu", "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
+#nmsplot(mesh_seedcompj.mds, mesh_compdata$treatment, "Hial", "Pema", "Viko", "Vogu", "topright", c("HIAL", "PEMA", "VIKO", "VOGU"))
 #I am not sure what this does.
 stressplot(mesh_seedcomp.mds)
 #nmsplot(mesh_seedcompj.mds, mesh_compdata$meshtype, "meshsmall", "meshregular", "topright", c("Fine Mesh", "Regular Mesh"))
@@ -410,7 +416,6 @@ mesh_seedcompj3d.mds <- metaMDS(binary, autotransform = F, expand = F, k = 3, tr
 mesh_seedcompj3d.mds$stress
 
 ### Using github technique to plot:
-
 
 #extract points from NMDS
 jc_points <- as.data.frame(mesh_seedcompj.mds[["points"]])
